@@ -1,0 +1,66 @@
+[[language]]
+name = "rust"
+auto-format = true
+
+
+[language-server]
+ols      = { command = "ols", args = [] }
+
+
+
+[[language]]
+name = "odin"
+auto-format = true
+scope = "scope.odin" # "source.odin"
+file-types = ["odin"]
+roots = ["ols.json"]
+language-servers = [ "ols" ]
+comment-token = "//"
+indent = { tab-width = 4, unit = " " }
+injection-regex = "odin"
+formatter = { command = "odinfmt", args = [ "-stdin", "true" ] }
+
+
+[[grammar]]
+name = "odin"
+#source = { git = "https://github.com/ap29600/tree-sitter-odin", rev = "b219207e49ffca2952529d33e94ed63b1b75c4f1" }
+source = { git = "https://github.com/amaanq/tree-sitter-odin" }
+
+[language-server.zls]
+command = "zls"
+
+[[language]]
+name = "go"
+scope = "source.go"
+injection-regex = "go"
+file-types = ["go"]
+roots = ["Gopkg.toml", "go.mod"]
+auto-format = true
+comment-token = "//"
+language-servers = [ "gopls" ]
+indent = { tab-width = 4, unit = "\t" } 
+
+[[language]]
+name = "c"
+language-servers = ["clangd"]
+auto-format = true
+# formatter = { command = "clang-format", args = ["--style={BasedOnStyle: LLVM, IndentWidth: 4}"] }
+formatter = { command = "clang-format", args = ["-style=file:/home/crimsondamask/.clang-format"] }
+indent = { tab-width = 4, unit = " " }
+
+[language-server.clangd]
+command = "clangd"
+
+[language-server.clangd.config]
+fallbackFlags = ["-DUNIT_TESTING"]
+
+[[language]]
+name = "cpp"
+language-servers = ["clangd"]
+auto-format = true
+block-comment-tokens = { start = "/*", end = "*/" }
+# formatter = { command = "clang-format", args = ["--style={BasedOnStyle: LLVM, IndentWidth: 4}"] }
+formatter = { command = "clang-format", args = ["-style=file:/home/crimsondamask/.clang-format"] }
+
+indent = { tab-width = 4, unit = " " }
+

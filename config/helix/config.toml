@@ -1,0 +1,49 @@
+theme = "ttox"
+
+[editor]
+
+#line-number = "relative"
+
+mouse = true
+#lsp.enable = false
+auto-completion = true
+cursorline = true
+cursorcolumn = false
+scroll-lines = 1
+
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.file-picker]
+hidden = false
+
+[editor.lsp]
+display-inlay-hints = false
+display-messages = true
+
+[editor.indent-guides]
+render = false
+character = " " # Some characters that work well: "▏", "┆", "┊", "⸽"
+skip-levels = 1
+
+[keys.normal]
+C-s = ":w" # Maps the Control-s to the typable command :w which is an alias for :write (save file)
+C-o = ":open ~/.config/helix/config.toml" # Maps the Control-o to opening of the helix config file
+1 = ":theme mytheme"
+2 = ":theme ttox"
+3 = ":theme modus_vivendi_tritanopia"
+C-h = "goto_line_start" 
+C-l = "goto_line_end" 
+a = "move_char_left" # Maps the 'a' key to the move_char_left command
+w = "move_line_up" # Maps the 'w' key move_line_up
+"C-S-esc" = "extend_line" # Maps Control-Shift-Escape to extend_line
+g = { a = "code_action" } # Maps `ga` to show possible code actions
+"ret" = ["open_below", "normal_mode"] # Maps the enter key to open_below then re-enter normal mode
+
+[keys.insert]
+"A-x" = "normal_mode" # Maps Alt-X to enter normal mode
+j = { k = "normal_mode" } # Maps `jk` to exit insert mode
+

@@ -1,0 +1,7 @@
+inherits = "adwaita-dark"
+
+"ui.background" = "black"
+# "comment" = "green"
+# "keyword.directive" = "light-red"
+#"type" = { modifiers = ["italic"] }
+# "constant" = "default"

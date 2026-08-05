@@ -1,0 +1,20 @@
+﻿  libcl.c
+C:\Users\Admin\Desktop\code\colossal-8eac143da8\colossal-8eac143da8\colossal_cpp\libcl\libcl\libcl.c(265,72): warning C4244: 'function': conversion from '__int64' to 'int', possible loss of data
+  (compiling source file '/libcl.c')
+  
+C:\Users\Admin\Desktop\code\colossal-8eac143da8\colossal-8eac143da8\colossal_cpp\libcl\libcl\libcl.c(267,55): warning C4244: 'function': conversion from '__int64' to 'int', possible loss of data
+  (compiling source file '/libcl.c')
+  
+C:\Users\Admin\Desktop\code\colossal-8eac143da8\colossal-8eac143da8\colossal_cpp\libcl\libcl\libcl.c(569,17): warning C4090: 'initializing': different 'const' qualifiers
+  (compiling source file '/libcl.c')
+  
+C:\Users\Admin\Desktop\code\colossal-8eac143da8\colossal-8eac143da8\colossal_cpp\libcl\libcl\libcl.c(593,17): warning C4090: 'initializing': different 'const' qualifiers
+  (compiling source file '/libcl.c')
+  
+C:\Users\Admin\Desktop\code\colossal-8eac143da8\colossal-8eac143da8\colossal_cpp\libcl\libcl\libcl.c(614,17): warning C4090: 'initializing': different 'const' qualifiers
+  (compiling source file '/libcl.c')
+  
+C:\Users\Admin\Desktop\code\colossal-8eac143da8\colossal-8eac143da8\colossal_cpp\libcl\libcl\libcl.c(784,30): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+  (compiling source file '/libcl.c')
+  
+  libcl.vcxproj -> C:\Users\Admin\Desktop\code\colossal-8eac143da8\colossal-8eac143da8\colossal_cpp\libcl\libcl\x64\Debug\libcl.lib

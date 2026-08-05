@@ -1,0 +1,5 @@
+inherits = "modus_operandi_tritanopia"
+
+# "type" = { modifiers = ["bold"] }
+"error" = "red"
+# "warning" = "orange"
