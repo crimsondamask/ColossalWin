@@ -478,7 +478,7 @@ static bool load_config(Link links[])
                 return false;
             }
 
-            links[i].tags[j].tag_addr.mb_addr = json_integer_value(mb_addr_json);
+            links[i].tags[j].tag_addr.mb_addr.reg = json_integer_value(mb_addr_json);
 
             eip_addr_json = json_object_get(tag_address_json, "ab_address");
 
@@ -1605,13 +1605,20 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
             // We let it leak into the next case
         }
         case MB_TCP: {
+
+            const char *function_type[] = {"HOLDING", "INPUT", "COIL"};
+            if (ImGui::Combo("Function Type", &ui_buffer->tags[*selected_tag_index].tag_addr.mb_addr.mb_function,
+                             function_type, IM_ARRAYSIZE(function_type)))
+            {
+                config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
+            }
             const char *value_types[] = {"INT", "REAL - Uses 2 registers", "COIL"};
             if (ImGui::Combo("Value Type", &ui_buffer->tags[*selected_tag_index].value_type, value_types,
                              IM_ARRAYSIZE(value_types)))
             {
                 config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
             }
-            if (ImGui::InputInt("Address", &ui_buffer->tags[*selected_tag_index].tag_addr.mb_addr))
+            if (ImGui::InputInt("Address", &ui_buffer->tags[*selected_tag_index].tag_addr.mb_addr.reg))
             {
                 config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
             }
@@ -2074,6 +2081,11 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                     {
                         config_edit_flags[i] |= CONFIG_EDIT_DEVICE_CONFIG;
                     }
+                    if (ImGui::Checkbox("Swap contiguous float registers",
+                                        &ui_buffer->link_config.mb_tcp_config.low_first))
+                    {
+                        config_edit_flags[i] |= CONFIG_EDIT_DEVICE_CONFIG;
+                    }
                     break;
                 }
                 case MB_SERIAL: {
@@ -2171,6 +2183,11 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                             ui_buffer->link_config.mb_serial_config.parity = 'N';
                             break;
                         }
+                    }
+                    if (ImGui::Checkbox("Swap contiguous float registers",
+                                        &ui_buffer->link_config.mb_serial_config.low_first))
+                    {
+                        config_edit_flags[i] |= CONFIG_EDIT_DEVICE_CONFIG;
                     }
                     break;
                 }
@@ -2667,12 +2684,14 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
         MbTcpConfig mb_tcp_config;
         sprintf(mb_tcp_config.ip, "127.0.0.1");
         mb_tcp_config.port = 5502;
+        mb_tcp_config.low_first = false;
 
         MbSerialConfig mb_serial_config;
         sprintf(mb_serial_config.com_port, "COM3");
         mb_serial_config.slave = 1;
         mb_serial_config.baudrate = BR_9600;
         mb_serial_config.parity = CL_SERIAL_PARITY_NONE;
+        mb_serial_config.low_first = false;
 
         S7Config s7_config;
         sprintf(s7_config.ip, "192.168.0.1");
