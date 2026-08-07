@@ -239,9 +239,7 @@ typedef struct Link
     int logging_type;
     bool logging_enabled;
     int poll_delay;
-    char url[URL_BUF_LEN];
-    char token[TOKEN_BUF_LEN];
-    unsigned long log_count;
+    double elapsed_time;
 } Link;
 
 Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkConfig config, size_t tag_count,

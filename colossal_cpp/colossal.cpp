@@ -3,7 +3,6 @@
 /// @file colossal.cpp
 
 #include "mariadb/mysql.h"
-#include <cstdint>
 #include <inttypes.h>
 #include <stdlib.h>
 #define _CRT_SECURE_NO_WARNINGS
@@ -206,9 +205,7 @@ static bool load_config(Link links[])
         }
 
 #if defined(_WIN32)
-        sprintf_s(links[i].url, "%s", json_string_value(url_json));
 #else
-        snprintf(links[i].url, sizeof(links[i].url), "%s", json_string_value(url_json));
 #endif
 
         token_json = json_object_get(link_json, "token");
@@ -219,8 +216,6 @@ static bool load_config(Link links[])
             json_decref(root);
             return false;
         }
-
-        sprintf(links[i].token, "%s", json_string_value(token_json));
 
         logging_json = json_object_get(link_json, "logging");
 
@@ -1518,23 +1513,12 @@ static void ui_loggers_window(size_t link_count, Link links[], Link ui_link_buff
         {
             config_edit_flags[*logger_selected_link] |= CONFIG_EDIT_CHANNEL_CONFIG;
         }
-        if (ImGui::InputText("API Token", ui_buffer->token, IM_ARRAYSIZE(ui_buffer->token),
-                             ImGuiInputTextFlags_CharsNoBlank))
-        {
-            config_edit_flags[*logger_selected_link] |= CONFIG_EDIT_DEVICE_CONFIG;
-        }
 
-        if (ImGui::InputText("Database URL", ui_buffer->url, IM_ARRAYSIZE(ui_buffer->url),
-                             ImGuiInputTextFlags_CharsNoBlank))
-        {
-            config_edit_flags[*logger_selected_link] |= CONFIG_EDIT_DEVICE_CONFIG;
-        }
         const char *logging_methods[] = {"LOCAL", "REMOTE"};
         if (ImGui::Combo("Logging Method", &ui_buffer->logging_type, logging_methods, IM_ARRAYSIZE(logging_methods)))
         {
             config_edit_flags[*logger_selected_link] |= CONFIG_EDIT_DEVICE_CONFIG;
         }
-        ImGui::Text("Logging Count: %lu", links[*logger_selected_link].log_count);
     }
     else
     {
@@ -1988,8 +1972,8 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                 {
 
 #if defined(_WIN32)
-                    sprintf_s(collapsing_header_title, "%s %s %s Config *", link->name,
-                              link->link_config.s7_config.cpu_info.ModuleTypeName,
+                    sprintf_s(collapsing_header_title, "%.2lf (us) %s %s %s Config *", link->elapsed_time * 1000000.0,
+                              link->name, link->link_config.s7_config.cpu_info.ModuleTypeName,
                               link->link_config.s7_config.cpu_info.SerialNumber);
 #else
                     snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s %s %s Config *", link->name,
@@ -2001,7 +1985,8 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                 {
 
 #if defined(_WIN32)
-                    sprintf_s(collapsing_header_title, "%s Config *", link->name);
+                    sprintf_s(collapsing_header_title, "%.2lf (us) %s Config *", link->elapsed_time * 1000000.0,
+                              link->name);
 #else
                     snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s Config *", link->name);
 #endif
@@ -2013,8 +1998,8 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                 {
 
 #if defined(_WIN32)
-                    sprintf_s(collapsing_header_title, "%s %s %s Config", link->name,
-                              link->link_config.s7_config.cpu_info.ModuleTypeName,
+                    sprintf_s(collapsing_header_title, "%.2lf (us) %s %s %s Config", link->elapsed_time * 1000000.0,
+                              link->name, link->link_config.s7_config.cpu_info.ModuleTypeName,
                               link->link_config.s7_config.cpu_info.ModuleName);
 #else
                     snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s %s %s Config", link->name,
@@ -2025,7 +2010,8 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                 else
                 {
 #if defined(_WIN32)
-                    sprintf_s(collapsing_header_title, "%s Config", link->name);
+                    sprintf_s(collapsing_header_title, "%.2lf (us) %s Config", link->elapsed_time * 1000000.0,
+                              link->name);
 #else
                     snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s Config", link->name);
 #endif
@@ -2344,7 +2330,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                     {
                     case MB_TCP:
                     case MB_SERIAL:
-                        ImGui::Text("%d", link->tags[j].tag_addr.mb_addr);
+                        ImGui::Text("%d", link->tags[j].tag_addr.mb_addr.reg);
                         break;
                     case EIP:
                         ImGui::Text("%s", link->tags[j].tag_addr.eip_tag_addr.tag_name);
@@ -2356,7 +2342,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                         break;
 
                     default:
-                        ImGui::Text("%d", link->tags[j].tag_addr.mb_addr);
+                        ImGui::Text("%d", link->tags[j].tag_addr.mb_addr.reg);
                         break;
                     }
                     ImGui::TableNextColumn();
@@ -2656,7 +2642,7 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
     bool is_config_loaded = load_config(config_links);
 
     menu_state.devices_menu = true;
-    menu_state.tag_displays = true;
+    menu_state.tag_menu = true;
 
     // Initialize each buffer for 10 products.
     // Can only keep 10 products at a time.
@@ -3050,9 +3036,9 @@ int polling_thread(void *arg)
 #endif
 
             link.timestamp = timestamp;
+            link.elapsed_time = 0.0;
             link.is_error = true;
-            // sprintf_s(link.err_msg, "Error while trying to connect to
-            // device: %S", s);
+            sprintf_s(link.err_msg, "Error while trying to connect to device: %ls", s);
 
             // Update the tags errors
             for (int i = 0; i < N_CHANNELS; i++)
@@ -3077,8 +3063,6 @@ int polling_thread(void *arg)
 
         while (!reconnect_flag) // Loop until error
         {
-            timestamp = (unsigned long)time(nullptr);
-            link.timestamp = timestamp;
             // Check if there is a configuration update and if we need to
             // reconnect the device.
             if (config_update_get(config_update_ptr, &link, &reconnect_flag))
@@ -3086,6 +3070,17 @@ int polling_thread(void *arg)
                 // printf("Config updated: Device %d\n", arg_ptr->id);
                 break;
             }
+
+            timestamp = (unsigned long)time(nullptr);
+            link.timestamp = timestamp;
+
+            LARGE_INTEGER frequency;
+            LARGE_INTEGER start;
+            LARGE_INTEGER end;
+            double elapsed_time;
+
+            QueryPerformanceFrequency(&frequency);
+            QueryPerformanceCounter(&start);
 
             for (int i = 0; i < link.tag_count; i++)
             {
@@ -3096,6 +3091,9 @@ int polling_thread(void *arg)
                     continue;
                 }
 
+                if (link.tags[i].write_flag)
+                {
+                }
                 // Read the tag.
                 if (cl_read_tag(&link, i) == -1)
                 {
@@ -3112,18 +3110,24 @@ int polling_thread(void *arg)
 
                     // break;
                 }
-                if (buf_put(buf_ptr, link))
-                {
-                    // printf("Producer N. %d produced data. timestamp:
-                    // %lu\n", id, timestamp);
-                }
+            }
+
+            QueryPerformanceCounter(&end);
+
+            elapsed_time = (double)(end.QuadPart - start.QuadPart) / frequency.QuadPart;
+            link.elapsed_time = elapsed_time;
+
+            if (buf_put(buf_ptr, link))
+            {
+                // printf("Producer N. %d produced data. timestamp:
+                // %lu\n", id, timestamp);
+            }
 
 #if defined(_WIN32)
-                Sleep(link.poll_delay);
+            Sleep(link.poll_delay);
 #else
-                sleep(link.poll_delay / 1000);
+            sleep(link.poll_delay / 1000);
 #endif
-            }
 
             if (reconnect_flag) // In case of an error, break out of the
                                 // loop and reconnect.

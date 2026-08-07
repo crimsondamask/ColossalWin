@@ -113,9 +113,6 @@ Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkCo
     link->timestamp = 0;
     link->logging_type = CL_LOCAL_LOGGING;
     link->logging_enabled = false;
-    strcpy(link->url, "http://127.0.0.1:8181/api/v3/write_lp?db=colossal&precision=second");
-    strcpy(link->token, "apiv3_VJSoTa7OaIRjYXweq0kNJY2gA2UlVcqh-knb8oOJoSpuU3QFfqrtlZk5NvJ-"
-                        "xviVJz8Pp0bSkjntbdBqGHFUKQ");
 
     link->tags = (Tag *)malloc(tag_count * sizeof(Tag));
 
@@ -218,6 +215,13 @@ int cl_connect_link(Link *link)
                            link->link_config.mb_serial_config.parity, 8, 1);
 
         if (modbus_set_slave(link->link_config.mb_serial_config.ctx, link->link_config.mb_serial_config.slave) == -1)
+        {
+            link->is_error = true;
+            sprintf(link->err_msg, "Could not connect to device.");
+            return -1;
+        }
+
+        if (modbus_set_response_timeout(link->link_config.mb_serial_config.ctx, 5, 0) == -1)
         {
             link->is_error = true;
             sprintf(link->err_msg, "Could not connect to device.");
