@@ -149,10 +149,7 @@ bool config_update_put(ConfigUpdate *config_update_ptr, Link *config_src, bool r
     // Indication that there is a configuration update
     // otherwise the thread can't know when to update the config.
     config_update_ptr->pending_update = true;
-    if (reconnect_required)
-    {
-        config_update_ptr->reconnect_required = true;
-    }
+    config_update_ptr->reconnect_required = reconnect_required;
 
     mtx_unlock(&config_update_ptr->mtx);
 
@@ -174,6 +171,10 @@ bool config_update_get(ConfigUpdate *config_update_ptr, Link *config_dst, bool *
 
     *config_dst = *config_update_ptr->new_link_update;
     config_dst->tags = tmp.tags;
+    if (!config_update_ptr->reconnect_required)
+    {
+        config_dst->link_config = tmp.link_config;
+    }
 
     // We clone the tags values. Assigning them directly will only copy the tag
     // array pointer

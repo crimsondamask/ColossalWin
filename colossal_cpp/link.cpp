@@ -86,6 +86,7 @@ int cl_new_tag(Link *link, char const *name, char const *tk, int id, TagAddress 
     link->tags[id].tag_value.int_value = 0;
     link->tags[id].tag_value.bool_value = 0;
 
+    link->tags[id].write_flag = false;
     link->tags[id].value_to_write.real_value = 0.0;
     link->tags[id].value_to_write.int_value = 0;
     link->tags[id].value_to_write.bool_value = 0;
@@ -215,13 +216,6 @@ int cl_connect_link(Link *link)
                            link->link_config.mb_serial_config.parity, 8, 1);
 
         if (modbus_set_slave(link->link_config.mb_serial_config.ctx, link->link_config.mb_serial_config.slave) == -1)
-        {
-            link->is_error = true;
-            sprintf(link->err_msg, "Could not connect to device.");
-            return -1;
-        }
-
-        if (modbus_set_response_timeout(link->link_config.mb_serial_config.ctx, 5, 0) == -1)
         {
             link->is_error = true;
             sprintf(link->err_msg, "Could not connect to device.");
@@ -817,6 +811,7 @@ int cl_write_tag(Link *link, int tag_id)
         return -1;
     }
 
+    int rc = {};
     switch (link->protocol)
     {
     // Modbus Serial
@@ -829,8 +824,6 @@ int cl_write_tag(Link *link, int tag_id)
             snprintf(tag->err_msg, sizeof(tag->err_msg), "The Tag protocol doesn't match the Link protocol");
             return -1;
         }
-
-        int rc;
 
         switch (tag->value_type)
         {
@@ -901,8 +894,6 @@ int cl_write_tag(Link *link, int tag_id)
             snprintf(tag->err_msg, sizeof(tag->err_msg), "The Tag protocol doesn't match the Link protocol");
             return -1;
         }
-
-        int rc;
 
         switch (tag->value_type)
         {

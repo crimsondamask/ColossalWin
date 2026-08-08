@@ -2228,6 +2228,18 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
             if (ImGui::Button(reconfig_button_buf))
             {
                 link = ui_buffer;
+                if (config_update_put(&config_update[i], link, false))
+                {
+                    // Reset the config change indication flags.
+                    config_edit_flags[i] = 0;
+                }
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Reconnect"))
+            {
+                link = ui_buffer;
                 if (config_update_put(&config_update[i], link, true))
                 {
                     // Reset the config change indication flags.
@@ -2387,8 +2399,8 @@ struct CurlMemoryStruct
 // }
 
 //
-int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
-// int main(int, char **)
+// int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+int main(int, char **)
 {
 
     glfwSetErrorCallback(glfw_error_callback);
@@ -3067,8 +3079,8 @@ int polling_thread(void *arg)
             // reconnect the device.
             if (config_update_get(config_update_ptr, &link, &reconnect_flag))
             {
-                // printf("Config updated: Device %d\n", arg_ptr->id);
-                break;
+                if (reconnect_flag)
+                    break;
             }
 
             timestamp = (unsigned long)time(nullptr);
@@ -3093,6 +3105,19 @@ int polling_thread(void *arg)
 
                 if (link.tags[i].write_flag)
                 {
+                    if (cl_write_tag(&link, i) == -1)
+                    {
+                        link.is_error = true;
+                        if (buf_put(buf_ptr, link))
+                        {
+                            // printf("Producer N. %d produced data. timestamp:
+                            // %lu\n", id, timestamp);
+                        }
+                    }
+                    else
+                    {
+                        link.tags[i].write_flag = false;
+                    }
                 }
                 // Read the tag.
                 if (cl_read_tag(&link, i) == -1)

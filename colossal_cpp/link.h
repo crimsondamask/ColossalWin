@@ -249,4 +249,4 @@ void cl_destroy_link(Link *link);
 int cl_new_tag(Link *link, char const *name, char const *tk, int id, TagAddress tag_addr, int value_type, int protocol,
                bool enabled);
 int cl_read_tag(Link *link, int tag_id);
-int cl_write_tag(Link *link, Tag *tag);
+int cl_write_tag(Link *link, int tag_id);

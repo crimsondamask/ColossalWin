@@ -33,12 +33,27 @@ C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2847,5
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2848,58): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2883,53): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2601,12): warning C4101: 'logging_th': unreferenced local variable
+  data_buffer.cpp
+  eval.cpp
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(322,27): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(331,27): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(456,23): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(519,70): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(530,23): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+  link.cpp
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(138,40): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(146,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(150,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(154,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(160,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(165,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(648,9): warning C4102: 'defaut': unreferenced label
 LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
 LINK : warning LNK4098: defaultlib 'MSVCRTD' conflicts with use of other libs; use /NODEFAULTLIB:library
   Generating code
-  2 of 2955 functions (<0.1%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    86 functions had inline decision re-evaluated but remain unchanged
+  Previous IPDB and IOBJ mismatch, fall back to full compilation.
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(171): warning C4172: returning address of local variable or temporary : link_init
+  All 2959 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   colossaal_app.vcxproj -> C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\x64\Release\colossaal_app.exe
   'pwsh.exe' is not recognized as an internal or external command,
