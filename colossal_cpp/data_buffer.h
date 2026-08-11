@@ -6,7 +6,8 @@
 /// @file
 /// Ring buffer to hold the data polled by the polling thread.
 /// The data is later consumed by main.
-typedef struct Buffer {
+typedef struct Buffer
+{
     /// A pointer to the link data.
     Link *link;
     /// A pointer array to the tags data
@@ -23,18 +24,23 @@ typedef struct Buffer {
 
 /// Used to send configuration updates from main to the device threads.
 /// We need a way to communicate data from GUI -> threads.
-typedef struct ConfigUpdate {
+typedef struct ConfigUpdate
+{
     mtx_t mtx;
-    Link *new_link_update;
+    Link new_link_update;
     bool pending_update;
     bool reconnect_required;
+    bool tag_write_pending;
+    int tag_id;
 } ConfigUpdate;
 
 bool config_update_init(ConfigUpdate *config_update);
-bool config_update_put(ConfigUpdate *config_update_ptr, Link *config_src,
-                       bool reconnect_required);
-bool config_update_get(ConfigUpdate *config_update_ptr, Link *config_dst,
-                       bool *reconnect_required);
+bool config_update_put(ConfigUpdate *config_update_ptr, Link *config_src, bool reconnect_required,
+                       bool tag_write_pending, int tag_to_write_id);
+bool config_update_get(ConfigUpdate *config_update_ptr, Link *config_dst, bool *reconnect_required,
+                       bool *tag_write_pending, int *tag_to_write_id);
+void tag_write_put(ConfigUpdate *config_update_ptr, int tag_id);
+void tag_write_get(ConfigUpdate *config_update_ptr, bool *tag_write_pending, int *tag_id);
 
 bool buf_init(Buffer *buf_ptr, mtx_t *mtx, size_t size);
 void buf_destroy(Buffer *buf_ptr);

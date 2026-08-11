@@ -129,13 +129,16 @@ bool buf_peek_last(Buffer *buf_ptr, Link *data_ptr)
 bool config_update_init(ConfigUpdate *config_update)
 {
     config_update->pending_update = false;
+    config_update->tag_write_pending = false;
+    config_update->tag_id = 0;
 
     return (mtx_init(&config_update->mtx, mtx_plain) == thrd_success);
 }
 
 /// Get the new device config (including channels config) from GUI (main)
 /// and put it in ConfigUpdate pointer to be read from the thread.
-bool config_update_put(ConfigUpdate *config_update_ptr, Link *config_src, bool reconnect_required)
+bool config_update_put(ConfigUpdate *config_update_ptr, Link *config_src, bool reconnect_required,
+                       bool tag_write_pending, int tag_to_write_id)
 {
     mtx_lock(&config_update_ptr->mtx);
 
@@ -144,7 +147,18 @@ bool config_update_put(ConfigUpdate *config_update_ptr, Link *config_src, bool r
         mtx_unlock(&config_update_ptr->mtx);
         return false;
     }
-    config_update_ptr->new_link_update = config_src;
+    config_update_ptr->new_link_update = *config_src;
+
+    if (tag_write_pending)
+    {
+        config_update_ptr->tag_write_pending = true;
+        config_update_ptr->tag_id = tag_to_write_id;
+    }
+
+    for (int i = 0; i < N_CHANNELS; i++)
+    {
+        config_update_ptr->new_link_update.tags[i] = config_src->tags[i];
+    }
 
     // Indication that there is a configuration update
     // otherwise the thread can't know when to update the config.
@@ -156,7 +170,8 @@ bool config_update_put(ConfigUpdate *config_update_ptr, Link *config_src, bool r
     return true;
 }
 
-bool config_update_get(ConfigUpdate *config_update_ptr, Link *config_dst, bool *reconnect_required)
+bool config_update_get(ConfigUpdate *config_update_ptr, Link *config_dst, bool *reconnect_required,
+                       bool *tag_write_pending, int *tag_to_write_id)
 {
     mtx_lock(&config_update_ptr->mtx);
 
@@ -169,19 +184,25 @@ bool config_update_get(ConfigUpdate *config_update_ptr, Link *config_dst, bool *
         return false;
     }
 
-    *config_dst = *config_update_ptr->new_link_update;
+    *config_dst = config_update_ptr->new_link_update;
     config_dst->tags = tmp.tags;
     if (!config_update_ptr->reconnect_required)
     {
         config_dst->link_config = tmp.link_config;
     }
 
+    if (config_update_ptr->tag_write_pending)
+    {
+        *tag_write_pending = true;
+        *tag_to_write_id = config_update_ptr->tag_id;
+        config_update_ptr->tag_write_pending = false;
+    }
     // We clone the tags values. Assigning them directly will only copy the tag
     // array pointer
     //
     for (size_t i = 0; i < N_CHANNELS; i++)
     {
-        config_dst->tags[i] = config_update_ptr->new_link_update->tags[i];
+        config_dst->tags[i] = config_update_ptr->new_link_update.tags[i];
     }
     // Reset the flag
     config_update_ptr->pending_update = false;
@@ -191,4 +212,23 @@ bool config_update_get(ConfigUpdate *config_update_ptr, Link *config_dst, bool *
     mtx_unlock(&config_update_ptr->mtx);
 
     return true;
+}
+
+void tag_write_put(ConfigUpdate *config_update_ptr, int tag_id)
+{
+    mtx_lock(&config_update_ptr->mtx);
+    config_update_ptr->tag_write_pending = true;
+    config_update_ptr->tag_id = tag_id;
+    mtx_unlock(&config_update_ptr->mtx);
+}
+void tag_write_get(ConfigUpdate *config_update_ptr, bool *tag_write_pending, int *tag_id)
+{
+    mtx_lock(&config_update_ptr->mtx);
+    if (config_update_ptr->tag_write_pending)
+    {
+        *tag_write_pending = true;
+        *tag_id = config_update_ptr->tag_id;
+    }
+    config_update_ptr->tag_write_pending = false;
+    mtx_unlock(&config_update_ptr->mtx);
 }

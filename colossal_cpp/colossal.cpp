@@ -1710,10 +1710,8 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
         if (ImGui::Button("Write"))
         {
 
-            ui_buffer->tags[*selected_tag_index].write_flag = true;
-            if (config_update_put(&config_update[selected_link_index], ui_buffer, false))
+            if (config_update_put(&config_update[selected_link_index], ui_buffer, false, true, *selected_tag_index))
             {
-                // ui_buffer->tags[selected_tag_index].write_flag = false;
 
                 // Reset the config change indication flags.
             }
@@ -2228,7 +2226,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
             if (ImGui::Button(reconfig_button_buf))
             {
                 link = ui_buffer;
-                if (config_update_put(&config_update[i], link, false))
+                if (config_update_put(&config_update[i], link, false, false, 0))
                 {
                     // Reset the config change indication flags.
                     config_edit_flags[i] = 0;
@@ -2240,7 +2238,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
             if (ImGui::Button("Reconnect"))
             {
                 link = ui_buffer;
-                if (config_update_put(&config_update[i], link, true))
+                if (config_update_put(&config_update[i], link, true, false, 0))
                 {
                     // Reset the config change indication flags.
                     config_edit_flags[i] = 0;
@@ -2399,8 +2397,8 @@ struct CurlMemoryStruct
 // }
 
 //
-// int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
-int main(int, char **)
+int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+// int main(int, char **)
 {
 
     glfwSetErrorCallback(glfw_error_callback);
@@ -3026,8 +3024,10 @@ int polling_thread(void *arg)
 #endif
         timestamp = (unsigned long)time(nullptr);
 
+        int tag_to_write_id = 0;
+        bool tag_write_pending = false;
         // Update the links (from the GUI) and reconnect.
-        if (config_update_get(config_update_ptr, &link, &reconnect_flag))
+        if (config_update_get(config_update_ptr, &link, &reconnect_flag, &tag_write_pending, &tag_to_write_id))
         {
             printf("Config updated: Device %d\n", arg_ptr->id);
         }
@@ -3075,14 +3075,20 @@ int polling_thread(void *arg)
 
         while (!reconnect_flag) // Loop until error
         {
+            int tag_to_write_id = 0;
+            bool tag_write_pending = false;
             // Check if there is a configuration update and if we need to
             // reconnect the device.
-            if (config_update_get(config_update_ptr, &link, &reconnect_flag))
+            if (config_update_get(config_update_ptr, &link, &reconnect_flag, &tag_write_pending, &tag_to_write_id))
             {
                 if (reconnect_flag)
                     break;
             }
 
+            if (tag_write_pending && tag_to_write_id < N_CHANNELS)
+            {
+                link.tags[tag_to_write_id].write_flag = true;
+            }
             timestamp = (unsigned long)time(nullptr);
             link.timestamp = timestamp;
 
@@ -3094,6 +3100,7 @@ int polling_thread(void *arg)
             QueryPerformanceFrequency(&frequency);
             QueryPerformanceCounter(&start);
 
+            link.is_error = false;
             for (int i = 0; i < link.tag_count; i++)
             {
 
@@ -3117,6 +3124,8 @@ int polling_thread(void *arg)
                     else
                     {
                         link.tags[i].write_flag = false;
+                        link.tags[i].is_error = false;
+                        link.is_error = false;
                     }
                 }
                 // Read the tag.

@@ -830,7 +830,7 @@ int cl_write_tag(Link *link, int tag_id)
         case VALUE_REAL: {
             uint16_t write_buf[2] = {};
 
-            modbus_set_float_abcd(tag->value_to_write.real_value, write_buf);
+            modbus_set_float_badc(tag->value_to_write.real_value, write_buf);
 
             rc =
                 modbus_write_registers(link->link_config.mb_serial_config.ctx, tag->tag_addr.mb_addr.reg, 2, write_buf);
@@ -843,6 +843,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         case VALUE_INT: {
@@ -861,6 +862,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         // TODO
@@ -879,6 +881,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             // We get an int value with the first 8 bits representing 8 coils.
             break;
         }
@@ -900,7 +903,7 @@ int cl_write_tag(Link *link, int tag_id)
         case VALUE_REAL: {
             uint16_t write_buf[2] = {};
 
-            modbus_set_float_abcd(tag->value_to_write.real_value, write_buf);
+            modbus_set_float_badc(tag->value_to_write.real_value, write_buf);
 
             rc = modbus_write_registers(link->link_config.mb_tcp_config.ctx, tag->tag_addr.mb_addr.reg, 2, write_buf);
             if (rc == -1)
@@ -911,6 +914,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         case VALUE_INT: {
@@ -927,6 +931,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         // TODO
@@ -945,6 +950,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             // We get an int value with the first 8 bits representing 8 coils.
             break;
         }
@@ -978,6 +984,7 @@ int cl_write_tag(Link *link, int tag_id)
 
             // Reset the error flag.
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         case VALUE_INT: {
@@ -1000,6 +1007,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         case VALUE_BOOL: {
@@ -1026,6 +1034,7 @@ int cl_write_tag(Link *link, int tag_id)
             }
 
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         default:
@@ -1072,6 +1081,7 @@ int cl_write_tag(Link *link, int tag_id)
 
             // Reset the error flag.
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         case VALUE_INT: {
@@ -1096,6 +1106,7 @@ int cl_write_tag(Link *link, int tag_id)
 
             // Reset the error flag.
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         case VALUE_BOOL: {
@@ -1120,6 +1131,7 @@ int cl_write_tag(Link *link, int tag_id)
 
             // Reset the error flag.
             tag->is_error = false;
+            tag->write_flag = false;
             break;
         }
         default:
