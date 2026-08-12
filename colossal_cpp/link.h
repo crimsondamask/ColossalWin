@@ -30,6 +30,7 @@
 #define PLOT_BUFFER_SIZE 300
 #define N_FRAMES_UNTIL_CONS 60
 #define EIP_TAG_TEMPLATE "protocol=ab_eip&gateway=%s&path=1,0&cpu=LGX&elem_count=1&name=%s"
+#define MAX_MB_REGISTERS 123
 
 #define CL_SERIAL_PARITY_NONE 'N'
 #define CL_SERIAL_PARITY_EVEN 'E'
@@ -37,6 +38,12 @@
 #define CL_VALUE_INT 0
 #define CL_VALUE_REAL 1
 #define CL_VALUE_BOOL 2
+
+enum class LinkPollingType
+{
+    SINGLE,
+    BLOCK
+};
 
 typedef enum LinkProtocol
 {
@@ -234,12 +241,13 @@ typedef struct Link
     unsigned long timestamp;
     size_t tag_count;
     Tag *tags;
-    // 0 for Local logging and 1 for remote
-    // TODO an enum would be better but int works more easily with GUI Combobox
     int logging_type;
     bool logging_enabled;
     int poll_delay;
     double elapsed_time;
+    LinkPollingType polling_type;
+    int polling_block_size;
+    uint16_t mb_registers_block[MAX_MB_REGISTERS];
 } Link;
 
 Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkConfig config, size_t tag_count,

@@ -3,6 +3,7 @@
 #include "libplctag/libplctag.h"
 #include "link.h"
 #include "snap7/snap7.h"
+#include <cstring>
 #include <stdio.h>
 #include <string.h>
 #if defined(_WIN32)
@@ -108,6 +109,8 @@ Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkCo
     link->link_config = config;
     link->tag_count = tag_count;
     link->is_error = true;
+    link->polling_type = LinkPollingType::SINGLE;
+    memset(link->mb_registers_block, 0, sizeof(link->mb_registers_block));
     link->poll_delay = 1000;
     strcpy(link->err_msg, "The link is disconnected.");
     link->need_to_reconnect = true;

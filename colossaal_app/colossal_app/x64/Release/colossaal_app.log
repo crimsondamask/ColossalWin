@@ -1,0 +1,71 @@
+﻿  colossal.cpp
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(8,9): warning C4005: '_CRT_SECURE_NO_WARNINGS': macro redefinition
+      C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(8,9):
+      '_CRT_SECURE_NO_WARNINGS' previously declared on the command line
+  
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(95,34): warning C4477: 'sprintf_s' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'size_t'
+      C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(95,34):
+      consider using '%zd' in the format string
+  
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(155,57): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(196,47): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(228,51): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(264,69): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(289,73): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(299,76): warning C4244: '=': conversion from '__int64' to 'long', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(363,65): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(373,65): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(458,61): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(476,71): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(510,81): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(520,77): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(530,81): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(629,59): warning C4806: '&': unsafe operation: no value of type 'bool' promoted to type 'int' can equal the given constant
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(863,28): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(864,28): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1059,96): warning C4244: 'argument': conversion from 'unsigned __int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1174,28): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1227,31): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1289,88): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2543,50): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2548,43): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2857,57): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2858,58): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2893,53): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2611,12): warning C4101: 'logging_th': unreferenced local variable
+  data_buffer.cpp
+  eval.cpp
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(322,27): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(331,27): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(456,23): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(519,70): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\eval.cpp(530,23): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_impl_glfw.cpp
+  imgui_impl_opengl3.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
+  implot.cpp
+  implot_demo.cpp
+  implot_items.cpp
+  link.cpp
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(142,40): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(150,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(154,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(158,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(164,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(169,48): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(645,9): warning C4102: 'defaut': unreferenced label
+  snap7.cpp
+LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
+LINK : warning LNK4098: defaultlib 'MSVCRTD' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(175): warning C4172: returning address of local variable or temporary : link_init
+  All 2960 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  colossaal_app.vcxproj -> C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\x64\Release\colossal_app.exe
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

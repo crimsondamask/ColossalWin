@@ -63,6 +63,10 @@ bool buf_put(Buffer *buf_ptr, Link data)
         buf_ptr->tags_ptrs[buf_ptr->tip][i] = data.tags[i];
     }
 
+    for (int i = 0; i < MAX_MB_REGISTERS; i++)
+    {
+        buf_ptr->link[buf_ptr->tip].mb_registers_block[i] = data.mb_registers_block[i];
+    }
     // Update the buffer link at index (tip).
     buf_ptr->link[buf_ptr->tip] = data;
     // Assign the link tags array to the respective allocated space.
@@ -97,6 +101,10 @@ bool buf_get(Buffer *buf_ptr, Link *data_ptr, int sec)
         return false;
     }
 
+    for (int i = 0; i < MAX_MB_REGISTERS; i++)
+    {
+        data_ptr->mb_registers_block[i] = buf_ptr->link[buf_ptr->tip].mb_registers_block[i];
+    }
     *data_ptr = buf_ptr->link[buf_ptr->tail];
     buf_ptr->tail = (buf_ptr->tail + 1) % buf_ptr->size;
     --buf_ptr->count;
@@ -117,6 +125,11 @@ bool buf_peek_last(Buffer *buf_ptr, Link *data_ptr)
     {
         mtx_unlock(&buf_ptr->mtx);
         return false;
+    }
+
+    for (int i = 0; i < MAX_MB_REGISTERS; i++)
+    {
+        data_ptr->mb_registers_block[i] = buf_ptr->link[buf_ptr->tip].mb_registers_block[i];
     }
 
     *data_ptr = buf_ptr->link[buf_ptr->tip - 1];
