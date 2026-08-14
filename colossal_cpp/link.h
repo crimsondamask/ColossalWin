@@ -253,6 +253,7 @@ typedef struct Link
 Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkConfig config, size_t tag_count,
                   bool active);
 int cl_connect_link(Link *link);
+int cl_diconnect_link(Link *link);
 void cl_destroy_link(Link *link);
 int cl_new_tag(Link *link, char const *name, char const *tk, int id, TagAddress tag_addr, int value_type, int protocol,
                bool enabled);

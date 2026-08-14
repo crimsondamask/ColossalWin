@@ -3182,7 +3182,11 @@ int polling_thread(void *arg)
                                 // loop and reconnect.
             {
                 printf("Reconnect requested\n");
-
+                // close and free any resources.
+                if (cl_diconnect_link(&link) == -1)
+                {
+                    // unimplemented.
+                }
                 break;
             }
         }

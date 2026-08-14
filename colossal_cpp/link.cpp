@@ -1148,3 +1148,35 @@ int cl_write_tag(Link *link, int tag_id)
 
     return EXIT_SUCCESS;
 }
+
+int cl_diconnect_link(Link *link)
+{
+
+    if (!link)
+    {
+        return -1;
+    }
+
+    switch (link->protocol)
+    {
+    case MB_SERIAL: {
+        if (link->link_config.mb_serial_config.ctx != NULL)
+        {
+            modbus_close(link->link_config.mb_serial_config.ctx);
+            modbus_free(link->link_config.mb_serial_config.ctx);
+        }
+    }
+    break;
+    case MB_TCP: {
+        if (link->link_config.mb_tcp_config.ctx != NULL)
+        {
+            modbus_close(link->link_config.mb_tcp_config.ctx);
+            modbus_free(link->link_config.mb_tcp_config.ctx);
+        }
+    }
+    default:
+        break;
+    }
+
+    return 0;
+}
