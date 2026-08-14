@@ -2464,6 +2464,21 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
         return EXIT_FAILURE;
     }
 
+    int width, height, channels;
+
+    unsigned char *pixels = stbi_load("icon.png", &width, &height, &channels, 4);
+
+    if (pixels)
+    {
+        GLFWimage images[1];
+        images[0].width = width;
+        images[0].height = height;
+        images[0].pixels = pixels;
+
+        glfwSetWindowIcon(window, 1, images);
+
+        stbi_image_free(pixels);
+    }
     // Create GLFW context.
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable Vsync.
