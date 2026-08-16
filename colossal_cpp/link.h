@@ -94,7 +94,6 @@ typedef struct MbTcpConfig
 typedef struct MbSerialConfig
 {
     char com_port[COM_PORT_BUF_LEN];
-    int slave;
     long baudrate;
     char parity;
     bool low_first = false;
@@ -154,6 +153,7 @@ typedef struct ModbusTagAddress
 {
     int mb_function;
     int reg;
+    int slave;
 } ModbusTagAddress;
 
 typedef struct TagAddress

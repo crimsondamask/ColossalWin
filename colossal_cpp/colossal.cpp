@@ -286,7 +286,7 @@ static bool load_config(Link links[])
             return false;
         }
 
-        links[i].link_config.mb_serial_config.slave = json_integer_value(serial_slave_json);
+        // links[i].link_config.mb_serial_config.slave = json_integer_value(serial_slave_json);
 
         serial_baudrate_json = json_object_get(mb_serial_config_json, "baudrate");
 
@@ -1602,6 +1602,10 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
             {
                 config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
             }
+            if (ImGui::InputInt("Slave", &ui_buffer->tags[*selected_tag_index].tag_addr.mb_addr.slave))
+            {
+                config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
+            }
             if (ImGui::InputInt("Address", &ui_buffer->tags[*selected_tag_index].tag_addr.mb_addr.reg))
             {
                 config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
@@ -2074,10 +2078,6 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
                 }
                 case MB_SERIAL: {
 
-                    if (ImGui::InputInt("Slave", &ui_buffer->link_config.mb_serial_config.slave))
-                    {
-                        config_edit_flags[i] |= CONFIG_EDIT_DEVICE_CONFIG;
-                    }
                     if (ImGui::InputText("Serial Port", ui_buffer->link_config.mb_serial_config.com_port,
                                          IM_ARRAYSIZE(ui_buffer->link_config.mb_serial_config.com_port)))
                     {
@@ -2699,7 +2699,6 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
 
         MbSerialConfig mb_serial_config;
         sprintf(mb_serial_config.com_port, "COM3");
-        mb_serial_config.slave = 1;
         mb_serial_config.baudrate = BR_9600;
         mb_serial_config.parity = CL_SERIAL_PARITY_NONE;
         mb_serial_config.low_first = false;

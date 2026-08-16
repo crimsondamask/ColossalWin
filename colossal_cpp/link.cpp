@@ -131,6 +131,7 @@ Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkCo
         // Address initialization with default values.
         TagAddress tag_addr = {};
         tag_addr.mb_addr.mb_function = MB_HOLDING;
+        tag_addr.mb_addr.slave = 1;
         tag_addr.mb_addr.reg = (int)i * 2;
         sprintf(tag_addr.eip_tag_addr.tag_name, "Tag%zu", i);
         sprintf(tag_addr.eip_tag_addr.eip_path, EIP_TAG_TEMPLATE, link->link_config.eip_config.ip,
@@ -217,13 +218,6 @@ int cl_connect_link(Link *link)
         link->link_config.mb_serial_config.ctx =
             modbus_new_rtu(link->link_config.mb_serial_config.com_port, link->link_config.mb_serial_config.baudrate,
                            link->link_config.mb_serial_config.parity, 8, 1);
-
-        if (modbus_set_slave(link->link_config.mb_serial_config.ctx, link->link_config.mb_serial_config.slave) == -1)
-        {
-            link->is_error = true;
-            sprintf(link->err_msg, "Could not connect to device.");
-            return -1;
-        }
 
 #if defined(_WIN32)
         if (modbus_connect(link->link_config.mb_serial_config.ctx) == -1)
@@ -358,6 +352,14 @@ int cl_read_tag(Link *link, int tag_id)
         }
 
         int rc;
+
+        rc = modbus_set_slave(link->link_config.mb_serial_config.ctx, tag->tag_addr.mb_addr.slave);
+        if (rc == -1)
+        {
+            tag->is_error = true;
+            sprintf(tag->err_msg, "Could not set slave.");
+            return -1;
+        }
 
         switch (tag->tag_addr.mb_addr.mb_function)
         {
@@ -510,6 +512,14 @@ int cl_read_tag(Link *link, int tag_id)
         }
 
         int rc;
+
+        rc = modbus_set_slave(link->link_config.mb_tcp_config.ctx, tag->tag_addr.mb_addr.slave);
+        if (rc == -1)
+        {
+            tag->is_error = true;
+            sprintf(tag->err_msg, "Could not set slave.");
+            return -1;
+        }
 
         switch (tag->tag_addr.mb_addr.mb_function)
         {
