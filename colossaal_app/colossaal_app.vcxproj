@@ -186,6 +186,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\Admin\Desktop\code\colossal_cpp\colossal_cpp\imgui;C:\Users\Admin\Desktop\code\colossal-565882b648\colossal-565882b648\colossal_cpp\mariadb;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

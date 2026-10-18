@@ -13,6 +13,8 @@
 #include "imgui/GLFW/glfw3.h"
 #include "imgui/IconsFontAwesome4.h"
 #include "imgui/imgui.h"
+#include <fstream>
+#include <iostream>
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/implot/implot.h"
@@ -28,6 +30,7 @@
 #include <string.h>
 #include <threads.h>
 #include <time.h>
+#include <filesystem>
 #if defined(_WIN32)
 #include <wincrypt.h>
 #include <windows.h>
@@ -584,6 +587,28 @@ bool load_texture_from_file(const char *file_name, GLuint *out_texture, int *out
     IM_FREE(file_data);
 
     return ret;
+}
+
+bool loadTextureDataFromFile(std::filesystem::path filePath, GLuint* outTexture, int* outWidth, int* outHeight)
+{
+    std::uintmax_t fileSize = std::filesystem::file_size(filePath);
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file)
+    {
+        return false;
+    }
+
+    std::vector<char> buffer(fileSize);
+    if (file.read(buffer.data(), fileSize))
+    {
+        bool ret = load_texture_from_memory(buffer.data(), fileSize, outTexture, outWidth, outHeight);
+        return ret;
+    }
+    else
+    {
+        return false;
+    }
+
 }
 
 static void ui_tag_display(size_t link_count, Link links[], HmiDisplay hmi_display[], int id, Buffer buf[],
@@ -1770,8 +1795,8 @@ struct CurlMemoryStruct
 // }
 
 //
-int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
-// int main(int, char **)
+//int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
+int main(int, char **)
 {
 
     glfwSetErrorCallback(glfw_error_callback);
@@ -2173,10 +2198,13 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
         hmi_display[i].plot_color = ImVec4(0, 255, 0, 255);
     }
 
-    int image_width = 0;
-    int image_height = 0;
-    GLuint image_texture = 0;
-    bool ret = load_texture_from_file("colossal.png", &image_texture, &image_width, &image_height);
+    int imageWidth = 0;
+    int imageHeight = 0;
+    GLuint imageTexture = 0;
+    //bool ret = load_texture_from_file("colossal.png", &image_texture, &image_width, &image_height);
+    // C++ implementation.
+    // Upgrade
+    bool ret = loadTextureDataFromFile(std::filesystem::path("colossal.png"), &imageTexture, &imageWidth, &imageHeight);
 
     if (!ret)
     {
@@ -2255,10 +2283,10 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
         if (ImGui::BeginMainMenuBar())
         {
             // Load our images
-            image_width = ImGui::GetContentRegionAvail().x;
-            image_height = ImGui::GetContentRegionAvail().y;
+            imageWidth = ImGui::GetContentRegionAvail().x;
+            imageHeight = ImGui::GetContentRegionAvail().y;
 
-            ImGui::Image((ImTextureID)(intptr_t)image_texture, ImVec2(110.0f, image_height + 8.0f));
+            ImGui::Image((ImTextureID)(intptr_t)imageTexture, ImVec2(110.0f, imageHeight + 8.0f));
 
             if (ImGui::BeginMenu("File"))
             {

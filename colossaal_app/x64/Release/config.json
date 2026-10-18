@@ -2,7 +2,7 @@
   {
     "name": "PLC_0",
     "tk": "PL",
-    "protocol": 0,
+    "protocol": 1,
     "url": "http://127.0.0.1:8181/api/v3/write_lp?db=colossal&precision=second",
     "token": "apiv3_VJSoTa7OaIRjYXweq0kNJY2gA2UlVcqh-knb8oOJoSpuU3QFfqrtlZk5NvJ-xviVJz8Pp0bSkjntbdBqGHFUKQ",
     "logging": 0,
@@ -28,7 +28,7 @@
     },
     "tags": [
       {
-        "name": "PIT-1001",
+        "name": "PIT-0001",
         "description": "Configured tag.",
         "unit": "BARG",
         "enabled": 1,
@@ -47,7 +47,7 @@
         }
       },
       {
-        "name": "PIT-1002",
+        "name": "PIT-0002",
         "description": "Configured tag.",
         "unit": "BARG",
         "enabled": 1,
@@ -106,7 +106,7 @@
     ]
   },
   {
-    
+
     "name": "PLC_1",
     "tk": "CL",
     "protocol": 0,
@@ -213,4 +213,3 @@
     ]
   }
 ]
-
