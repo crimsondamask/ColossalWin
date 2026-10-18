@@ -33,6 +33,7 @@
     <ClCompile Include="..\colossal_cpp\imgui\implot\implot_demo.cpp" />
     <ClCompile Include="..\colossal_cpp\imgui\implot\implot_items.cpp" />
     <ClCompile Include="..\colossal_cpp\link.cpp" />
+    <ClCompile Include="..\colossal_cpp\plot_buffer.cpp" />
     <ClCompile Include="..\colossal_cpp\snap7\snap7.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +63,7 @@
     <ClInclude Include="..\colossal_cpp\libplctag\libplctag.h" />
     <ClInclude Include="..\colossal_cpp\link.h" />
     <ClInclude Include="..\colossal_cpp\nfd.h" />
+    <ClInclude Include="..\colossal_cpp\plot_buffer.h" />
     <ClInclude Include="..\colossal_cpp\snap7\snap7.h" />
     <ClInclude Include="..\colossal_cpp\stb_image.h" />
     <ClInclude Include="resource.h" />

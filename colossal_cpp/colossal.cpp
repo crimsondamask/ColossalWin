@@ -3,6 +3,7 @@
 /// @file colossal.cpp
 
 #include "mariadb/mysql.h"
+#include <cmath>
 #include <inttypes.h>
 #include <stdlib.h>
 #define _CRT_SECURE_NO_WARNINGS
@@ -49,9 +50,8 @@
 
 double *plot_time_data = (double *)malloc(1 * sizeof(double));
 double *plot_value_data = (double *)malloc(1 * sizeof(double));
+
 static int polling_thread(void *arg);
-static int logging_thread(void *arg);
-static void fetch_data_from_db(RecordQuery records[], bool time_scale_limit, bool is_time_period);
 
 static bool load_config(Link links[])
 {
@@ -585,493 +585,6 @@ bool load_texture_from_file(const char *file_name, GLuint *out_texture, int *out
 
     return ret;
 }
-// static Tag get_tag_from_log_value(uint64_t val, Link links[]) {
-//     Tag tag = {};
-//     return tag;
-// }
-/*
- * Gets a UINT64 value built from the tag properties
- * and value to be logged into a BIGINT database field.
- * Bit 0-31: Tag value data.
- * Bit 32-39: Value Type:
- *    0: BOOL.
- *    1: INT.
- *    2: FLOAT.
- * Bit 40-47: Unit:
- *    0: Barg
- *    1: Psig
- *    2: DegC
- *    3: DegF
- * Bit 48: ERROR FLAG.
- */
-static uint64_t get_log_value_from_tag_data(Tag tag)
-{
-    byte buffer_val[8] = {};
-    uint64_t res = 0;
-    uint32_t pack = {};
-    memcpy(&pack, &tag.tag_value.real_value, 4);
-
-    switch (tag.value_type)
-    {
-    case VALUE_REAL:
-        buffer_val[3] = (byte)(pack & 0xFF);
-        buffer_val[2] = (byte)((pack >> 8) & 0xFF);
-        buffer_val[1] = (byte)((pack >> 16) & 0xFF);
-        buffer_val[0] = (byte)((pack >> 24) & 0xFF);
-        break;
-    case VALUE_INT:
-        buffer_val[3] = (byte)(tag.tag_value.int_value & 0xFF);
-        buffer_val[2] = (byte)((tag.tag_value.int_value >> 8) & 0xFF);
-        buffer_val[1] = (byte)((tag.tag_value.int_value >> 16) & 0xFF);
-        buffer_val[0] = (byte)((tag.tag_value.int_value >> 24) & 0xFF);
-        break;
-    case VALUE_BOOL:
-        buffer_val[3] = (byte)(tag.tag_value.bool_value & 0xFF);
-        buffer_val[2] = (byte)((tag.tag_value.bool_value >> 8) & 0xFF);
-        buffer_val[1] = (byte)((tag.tag_value.bool_value >> 16) & 0xFF);
-        buffer_val[0] = (byte)((tag.tag_value.bool_value >> 24) & 0xFF);
-        break;
-    default:
-        buffer_val[3] = (byte)(pack & 0xFF);
-        buffer_val[2] = (byte)((pack >> 8) & 0xFF);
-        buffer_val[1] = (byte)((pack >> 16) & 0xFF);
-        buffer_val[0] = (byte)((pack >> 24) & 0xFF);
-        break;
-    }
-
-    buffer_val[4] = (byte)(tag.value_type & 0xFF);
-    buffer_val[5] = 'b';                   /* TODO: make a list of units as enums.*/
-    buffer_val[6] = (byte)(!tag.is_error); /* Present data flag */
-    // buffer_val[6] = (byte)((tag.is_error | !tag.enabled) & 0xFF);
-    buffer_val[7] = 0x0; /* TODO: Error type enum.*/
-
-    memcpy(&res, buffer_val, 8);
-
-    return res;
-}
-
-static void fetch_data_from_db(RecordQuery records[], bool time_scale_limit, bool is_time_period)
-{
-    MYSQL_RES *mysql_res;
-    MYSQL *mysql = mysql_init(NULL);
-
-    if (!mysql_real_connect(mysql, NULL, "root", "root", "mydb", LOG_MARIADB_PORT, NULL, CLIENT_MULTI_STATEMENTS))
-    {
-
-        records->is_error = true;
-        snprintf(records->error_msg, sizeof(records->error_msg), "Failed to connect to database. %s",
-                 mysql_error(mysql));
-
-        fprintf(stderr, "Failed to connect to mariadb. %s\n", mysql_error(mysql));
-
-        mysql_close(mysql);
-    }
-    else
-    {
-        char export_sql[1024];
-        if (is_time_period)
-        {
-            if (time_scale_limit)
-            {
-                snprintf(export_sql, sizeof(export_sql),
-                         "SELECT timestamp, FROM_UNIXTIME(timestamp, "
-                         "'%%y/%%m/%%d'), "
-                         "FROM_UNIXTIME(timestamp, '%%H:%%i:%%s'), id, %s FROM "
-                         "mydb.LINK_%d WHERE timestamp >= "
-                         "UNIX_TIMESTAMP(%s) ORDER BY timestamp;",
-                         records->cols, records->link_id, records->start);
-            }
-            else
-            {
-                snprintf(export_sql, sizeof(export_sql),
-                         "SELECT timestamp, FROM_UNIXTIME(timestamp, "
-                         "'%%y/%%m/%%d'), "
-                         "FROM_UNIXTIME(timestamp, '%%H:%%i:%%s'), id, %s FROM "
-                         "mydb.LINK_%d WHERE timestamp BETWEEN "
-                         "UNIX_TIMESTAMP(%s) AND UNIX_TIMESTAMP(%s) ORDER BY "
-                         "timestamp;",
-                         records->cols, records->link_id, records->start, records->end);
-            }
-        }
-        else
-        {
-            if (time_scale_limit)
-            {
-                snprintf(export_sql, sizeof(export_sql),
-                         "SELECT timestamp, FROM_UNIXTIME(timestamp, "
-                         "'%%y/%%m/%%d'), "
-                         "FROM_UNIXTIME(timestamp, '%%H:%%i:%%s'), id, %s FROM "
-                         "mydb.LINK_%d WHERE timestamp >= "
-                         "UNIX_TIMESTAMP('%s') ORDER BY timestamp;",
-                         records->cols, records->link_id, records->start);
-            }
-            else
-            {
-                snprintf(export_sql, sizeof(export_sql),
-                         "SELECT timestamp, FROM_UNIXTIME(timestamp, "
-                         "'%%y/%%m/%%d'), "
-                         "FROM_UNIXTIME(timestamp, '%%H:%%i:%%s'), id, %s FROM "
-                         "mydb.LINK_%d WHERE timestamp BETWEEN "
-                         "UNIX_TIMESTAMP('%s') AND UNIX_TIMESTAMP('%s') ORDER BY "
-                         "timestamp;",
-                         records->cols, records->link_id, records->start, records->end);
-            }
-        }
-
-        printf("EXPORT   %s\n", export_sql);
-
-        if (mysql_query(mysql, export_sql))
-        {
-            records->is_error = true;
-            snprintf(records->error_msg, sizeof(records->error_msg), "Failed to run SQL. %s", mysql_error(mysql));
-
-            fprintf(stderr, "Failed to run SQL. %s\n", mysql_error(mysql));
-
-            mysql_close(mysql);
-        }
-        else
-        {
-            records->is_error = false;
-            mysql_res = mysql_store_result(mysql);
-
-            if (mysql_res)
-            {
-                unsigned long long num_rows = mysql_num_rows(mysql_res);
-                int num_fields = mysql_num_fields(mysql_res);
-                MYSQL_FIELD *fields = mysql_fetch_fields(mysql_res);
-
-                // if (records->fields)
-                // {
-                //     free(records->fields);
-                // }
-
-                if (records->fields)
-                {
-                    records->fields = (FieldInfo *)realloc(records->fields, num_fields * sizeof(FieldInfo));
-                }
-                else
-                {
-                    FieldInfo *field_infos = (FieldInfo *)malloc(num_fields * sizeof(FieldInfo));
-
-                    records->fields = field_infos;
-                }
-
-                for (int i = 0; i < num_fields; i++)
-                {
-                    snprintf(records->fields[i].name, sizeof(records->fields[i].name), "%s", fields[i].name);
-                    records->fields[i].length = fields[i].name_length;
-                }
-                records->num_rows = num_rows;
-                records->num_fields = num_fields;
-
-                MYSQL_ROW row;
-                RecordRow *prev = records->rows;
-                records->rows = (RecordRow *)realloc(prev, num_rows * sizeof(RecordRow));
-
-                plot_time_data = (double *)realloc(plot_time_data, num_rows * sizeof(double));
-                plot_value_data = (double *)realloc(plot_value_data, num_rows * sizeof(double));
-
-                for (unsigned long long i = 0; i < num_rows; i++)
-                {
-
-                    row = mysql_fetch_row(mysql_res);
-
-                    // if (records->rows[i].tags != NULL)
-                    // {
-                    //     free(records->rows[i].tags);
-                    // }
-
-                    // records->rows[i].tags = (uint64_t *)(malloc(num_fields *
-                    // sizeof(uint64_t)));
-
-                    records->rows[i].timestamp = strtoull(row[0] ? row[0] : "0", NULL, 10);
-
-                    if (row[3])
-                    {
-                        records->rows[i].id = strtoll(row[3], NULL, 10);
-                    }
-                    else
-                    {
-                        records->rows[i].id = 0;
-                    }
-
-                    if (num_fields > N_CHANNELS)
-                    {
-                        for (int j = 4; j < N_CHANNELS; j++)
-                        {
-
-                            if (row[j])
-                            {
-                                uint64_t res = (uint64_t)strtoull(row[j], NULL, 10);
-                                records->rows[i].tags[j] = res;
-                            }
-                            else
-                            {
-                                records->rows[i].tags[j] = 0;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (int j = 4; j < num_fields; j++)
-                        {
-
-                            if (row[j])
-                            {
-                                uint64_t res = (uint64_t)strtoull(row[j], NULL, 10);
-                                records->rows[i].tags[j] = res;
-                            }
-                            else
-                            {
-                                records->rows[i].tags[j] = 0;
-                            }
-                        }
-                    }
-                    snprintf(records->rows[i].date, sizeof(records->rows[i].date), "%s", row[1] ? row[1] : "NULL");
-
-                    snprintf(records->rows[i].time, sizeof(records->rows[i].time), "%s", row[2] ? row[2] : "NULL");
-                }
-                mysql_free_result(mysql_res);
-            }
-            mysql_close(mysql);
-        }
-    }
-}
-
-static void ui_plot_window(size_t link_count, RecordQuery *records, bool *menu_state, int selected_link_index,
-                           int selected_tag_index, ImPlotStyle style, Link *links)
-{
-    // Buffer buffer = buf[selected_link_index];
-
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
-    char plot_window_title[32];
-#if defined(_WIN32)
-    sprintf_s(plot_window_title, "Tags Plot");
-#else
-    snprintf(plot_window_title, sizeof(plot_window_title), "Tags Plot");
-#endif
-
-    if (ImGui::Begin(plot_window_title, menu_state))
-    {
-        ImGui::PopStyleColor();
-
-        // ImGuiStyle style = ImGui::GetStyle();
-        // ImGui::StyleColorsDark();
-
-        ImVec2 win_size = ImGui::GetWindowSize();
-        ImVec2 plot_size = {};
-        plot_size.x = 0.95 * win_size.x;
-        plot_size.y = 0.95 * win_size.y;
-
-        static bool plot_time_scale_limit = true;
-        static bool auto_fetch = true;
-        static long last_fetch = 0;
-        static int plot_fetching_period = 0;
-        const char *plot_fetching_period_arr[] = {"NONE", "LAST 5 MIN", "LAST 15 MIN", "LAST HOUR", "LAST 24H"};
-        bool is_time_period = false;
-
-        if (ImGui::CollapsingHeader("Plot Settings"))
-        {
-
-            if (ImGui::Combo("Period", &plot_fetching_period, plot_fetching_period_arr,
-                             IM_ARRAYSIZE(plot_fetching_period_arr)))
-            {
-                switch (plot_fetching_period)
-                {
-                case 0:
-                    is_time_period = false;
-                    snprintf(records->start, sizeof(records->start), "2025/09/28 00:00:00");
-                    snprintf(records->end, sizeof(records->end), "2025/09/29 00:00:00");
-                    fetch_data_from_db(records, plot_time_scale_limit, is_time_period);
-                    break;
-                case 1:
-                    is_time_period = true;
-                    snprintf(records->start, sizeof(records->start), "DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
-                    snprintf(records->end, sizeof(records->end), "NOW()");
-                    fetch_data_from_db(records, plot_time_scale_limit, is_time_period);
-                    break;
-                case 2:
-                    is_time_period = true;
-                    snprintf(records->start, sizeof(records->start), "DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
-                    snprintf(records->end, sizeof(records->end), "NOW()");
-                    fetch_data_from_db(records, plot_time_scale_limit, is_time_period);
-                    break;
-                case 3:
-                    is_time_period = true;
-                    snprintf(records->start, sizeof(records->start), "DATE_SUB(NOW(), INTERVAL 1 HOUR)");
-                    snprintf(records->end, sizeof(records->end), "NOW()");
-                    fetch_data_from_db(records, plot_time_scale_limit, is_time_period);
-                    break;
-                case 4:
-                    is_time_period = true;
-                    snprintf(records->start, sizeof(records->start), "DATE_SUB(NOW(), INTERVAL 24 HOUR)");
-                    snprintf(records->end, sizeof(records->end), "NOW()");
-                    fetch_data_from_db(records, plot_time_scale_limit, is_time_period);
-                    break;
-                default:
-                    is_time_period = true;
-                    snprintf(records->start, sizeof(records->start), "DATE_SUB(NOW(), INTERVAL 5 MINUTE)");
-                    snprintf(records->end, sizeof(records->end), "NOW()");
-                    break;
-                }
-            }
-
-            ImGui::SameLine();
-            ImGui::Checkbox("Auto Fetch", &auto_fetch);
-            ImGui::InputText("Start", records->start, IM_ARRAYSIZE(records->start));
-            ImGui::BeginDisabled(plot_time_scale_limit);
-            ImGui::InputText("End", records->end, IM_ARRAYSIZE(records->end));
-            ImGui::EndDisabled();
-            ImGui::SameLine();
-            ImGui::Checkbox("Last Record", &plot_time_scale_limit);
-            ImGui::InputText("Column list", records->cols, IM_ARRAYSIZE(records->cols));
-
-            char const *combo_array[N_DEVICES] = {};
-
-            for (int i = 0; i < N_DEVICES; i++)
-            {
-                combo_array[i] = links[i].name;
-            }
-
-            ImGui::Combo("Selected Link", &records->link_id, combo_array, IM_ARRAYSIZE(combo_array));
-        }
-
-        switch (plot_fetching_period)
-        {
-        case 0:
-            is_time_period = false;
-            break;
-        case 1:
-            is_time_period = true;
-            break;
-        case 2:
-            is_time_period = true;
-            break;
-        case 3:
-            is_time_period = true;
-            break;
-        case 4:
-            is_time_period = true;
-            break;
-        default:
-            is_time_period = true;
-            break;
-        }
-        if (auto_fetch && plot_time_scale_limit)
-        {
-            time_t current_time = time(NULL);
-
-            if (((long)current_time - last_fetch) >= 5)
-            {
-                fetch_data_from_db(records, plot_time_scale_limit, is_time_period);
-                last_fetch = (long)current_time;
-            }
-        }
-        // if ( records->fields ) {
-        if (plot_time_data && plot_value_data)
-        {
-            char **combo_array;
-            combo_array = (char **)malloc((records->num_fields) * sizeof(char *));
-
-            for (int i = 0; i < records->num_fields; i++)
-            {
-                combo_array[i] = records->fields[i].name;
-            }
-
-            static int selected_field = 0;
-
-            ImGui::Combo("Tag Selected", &selected_field, combo_array, records->num_fields);
-
-            free(combo_array);
-
-            ImPlot::GetStyle() = style;
-
-            if (ImPlot::BeginPlot("##Tags", plot_size))
-            {
-
-                for (unsigned long long i = 0; i < records->num_rows; i++)
-                {
-
-                    byte val[8];
-                    uint64_t val_buf = records->rows[i].tags[selected_field];
-                    float real_val = 0;
-                    int int_val = 0;
-                    byte real_val_arr[4];
-
-                    memcpy(val, &val_buf, 8);
-
-                    int value_type = (int)val[4];
-                    int data_present = (int)val[6];
-
-                    plot_time_data[i] = (double)records->rows[i].timestamp;
-
-                    if (data_present)
-                    {
-
-                        switch (value_type)
-                        {
-                        case VALUE_REAL:
-                            real_val_arr[0] = val[3];
-                            real_val_arr[1] = val[2];
-                            real_val_arr[2] = val[1];
-                            real_val_arr[3] = val[0];
-                            memcpy(&real_val, &real_val_arr[0], 4);
-
-                            plot_value_data[i] = (double)real_val;
-
-                            break;
-                        case VALUE_INT:
-                            real_val_arr[0] = val[3];
-                            real_val_arr[1] = val[2];
-                            real_val_arr[2] = val[1];
-                            real_val_arr[3] = val[0];
-                            memcpy(&int_val, &real_val_arr[0], 4);
-                            plot_value_data[i] = (double)int_val;
-                            break;
-                        default:
-                            real_val_arr[0] = val[3];
-                            real_val_arr[1] = val[2];
-                            real_val_arr[2] = val[1];
-                            real_val_arr[3] = val[0];
-                            memcpy(&real_val, &real_val_arr[0], 4);
-                            plot_value_data[i] = (double)real_val;
-                            break;
-                        }
-                    }
-                    else
-                    {
-
-                        plot_value_data[i] = NAN;
-                    }
-                }
-
-                ImPlot::GetStyle().Colormap = ImPlotColormap_Deep;
-                ImPlot::GetStyle().UseLocalTime = true;
-                ImPlot::GetStyle().Use24HourClock = true;
-                ImPlot::GetStyle().LineWeight = 2.0f;
-                // ImPlot::GetStyle().Colormap = ImPlotColormap_Pastel;
-                ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
-
-                int plot_flags = 0;
-                plot_flags |= ImPlotShadedFlags_None;
-                char plot_name[32];
-                snprintf(plot_name, sizeof(plot_name), "%s", records->fields[selected_field].name);
-                ImPlot::PlotLine(plot_name, plot_time_data, plot_value_data, records->num_rows - 1, plot_flags, 0,
-                                 sizeof(double));
-
-                ImPlot::EndPlot();
-
-                // free(tag_time_data);
-                // free(tag_value_data);
-            }
-        }
-    }
-    else
-    {
-        ImGui::PopStyleColor();
-    }
-    ImGui::End();
-}
 
 static void ui_tag_display(size_t link_count, Link links[], HmiDisplay hmi_display[], int id, Buffer buf[],
                            bool *menu_state, ImFont *display_font, ImFont *regular_font, ImFont *icons)
@@ -1308,217 +821,16 @@ static void ui_tag_display(size_t link_count, Link links[], HmiDisplay hmi_displ
     ImGui::End();
 }
 
-static void ui_export_data_window(size_t link_count, Link links[], RecordQuery *records, bool *menu_state)
+static void ui_about_window(bool *menu_state)
 {
 
-    char export_window_title[32];
-#if defined(_WIN32)
-    sprintf_s(export_window_title, "Data Export");
-#else
-    snprintf(export_window_title, sizeof(export_window_title), "Data Export");
-#endif
     ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
-
-    if (ImGui::Begin(export_window_title, menu_state))
+    char about_window_title[32];
+    sprintf_s(about_window_title, "About Colossal");
+    if (ImGui::Begin(about_window_title, menu_state))
     {
         ImGui::PopStyleColor();
-
-        static bool time_scale_limit = true;
-        ImGui::InputText("Start", records->start, IM_ARRAYSIZE(records->start));
-        ImGui::BeginDisabled(time_scale_limit);
-        ImGui::InputText("End", records->end, IM_ARRAYSIZE(records->end));
-        ImGui::EndDisabled();
-        ImGui::SameLine();
-        ImGui::Checkbox("Last Record", &time_scale_limit);
-        ImGui::InputText("Column list", records->cols, IM_ARRAYSIZE(records->cols));
-
-        char const *combo_array[N_DEVICES] = {};
-
-        for (int i = 0; i < N_DEVICES; i++)
-        {
-            combo_array[i] = links[i].name;
-        }
-
-        ImGui::Combo("Selected Link", &records->link_id, combo_array, IM_ARRAYSIZE(combo_array));
-
-        if (records->is_error)
-        {
-            ImGui::TextColored(ImVec4(255, 0, 0, 255), "ERROR: %s", records->error_msg);
-        }
-        if (ImGui::Button("Fetch Data"))
-        {
-
-            fetch_data_from_db(records, time_scale_limit, false);
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Export Data"))
-        {
-            nfdchar_t *out_path = NULL;
-            nfdresult_t res = NFD_SaveDialog("txt,csv,tab", NULL, &out_path);
-
-            if (res == NFD_OKAY)
-            {
-                printf("%s\n", out_path);
-            }
-            else if (res == NFD_CANCEL)
-            {
-                printf("Cancelled\n");
-            }
-            else
-            {
-                printf("%s\n", NFD_GetError());
-            }
-        }
-        if (records->fields)
-        {
-
-            if (ImGui::BeginTable("Tag Data", records->num_fields,
-                                  ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY |
-                                      ImGuiTableFlags_ScrollX | ImGuiTableFlags_RowBg))
-            {
-                ImGui::TableSetupColumn("ID");
-                ImGui::TableSetupColumn("Date");
-                ImGui::TableSetupColumn("Time");
-                for (int i = 4; i < records->num_fields; i++)
-                {
-                    char col_name[32] = {};
-                    snprintf(col_name, sizeof(col_name), "%s", records->fields[i].name);
-                    ImGui::TableSetupColumn(col_name);
-                }
-                ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableHeadersRow();
-
-                for (unsigned long long i = 0; i < records->num_rows; i++)
-                {
-                    ImGui::TableNextRow();
-
-                    ImGui::TableNextColumn();
-                    char id_str[32];
-                    snprintf(id_str, sizeof(id_str), "%llu", records->rows[i].id);
-                    ImGui::Text("%s", id_str);
-
-                    ImGui::TableNextColumn();
-
-                    char date_str[64];
-                    snprintf(date_str, sizeof(date_str), "%s", records->rows[i].date);
-                    ImGui::Text("%s", date_str);
-
-                    ImGui::TableNextColumn();
-
-                    char time_str[64];
-                    snprintf(time_str, sizeof(time_str), "%s", records->rows[i].time);
-                    ImGui::Text("%s", time_str);
-
-                    for (int j = 4; j < records->num_fields; j++)
-                    {
-                        char val_str[64] = {};
-
-                        byte val[8];
-                        uint64_t val_buf = records->rows[i].tags[j];
-                        float real_val = 0;
-                        int int_val = 0;
-                        byte real_val_arr[4] = {};
-
-                        // if (val_buf == 0)
-                        //     continue;
-
-                        memcpy(val, &val_buf, 8);
-
-                        int value_type = (int)val[4];
-
-                        int data_present = (int)val[6];
-
-                        if (data_present)
-                        {
-                            switch (value_type)
-                            {
-                            case VALUE_REAL:
-                                real_val_arr[0] = val[3];
-                                real_val_arr[1] = val[2];
-                                real_val_arr[2] = val[1];
-                                real_val_arr[3] = val[0];
-                                memcpy(&real_val, &real_val_arr[0], 4);
-                                snprintf(val_str, sizeof(val_str), "%.3f", real_val);
-                                break;
-                            case VALUE_INT:
-                                real_val_arr[0] = val[3];
-                                real_val_arr[1] = val[2];
-                                real_val_arr[2] = val[1];
-                                real_val_arr[3] = val[0];
-                                memcpy(&int_val, &real_val_arr[0], 4);
-                                snprintf(val_str, sizeof(val_str), "%d", int_val);
-                                break;
-                            default:
-                                real_val_arr[0] = val[3];
-                                real_val_arr[1] = val[2];
-                                real_val_arr[2] = val[1];
-                                real_val_arr[3] = val[0];
-                                // memcpy(&int_val, &real_val_arr[0], 4);
-                                int_val = 0;
-                                snprintf(val_str, sizeof(val_str), "%d", int_val);
-                                break;
-                            }
-                            ImGui::TableNextColumn();
-                            ImGui::Text("%s", val_str);
-                        }
-                        else
-                        {
-                            ImGui::TableNextColumn();
-                            ImGui::Text("NULL");
-                        }
-                    }
-                }
-                ImGui::EndTable();
-            }
-        }
-    }
-    else
-    {
-        ImGui::PopStyleColor();
-    }
-    ImGui::End();
-}
-
-static void ui_loggers_window(size_t link_count, Link links[], Link ui_link_buffers[], bool *menu_state,
-                              int *logger_selected_link, int config_edit_flags[])
-{
-    Link *ui_buffer = &ui_link_buffers[*logger_selected_link];
-    const char *link_names[N_DEVICES] = {};
-
-    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
-    char logger_window_title[32];
-#if defined(_WIN32)
-    sprintf_s(logger_window_title, "Logging");
-#else
-    snprintf(logger_window_title, sizeof(logger_window_title), "Logging");
-#endif
-
-    if (ImGui::Begin(logger_window_title, menu_state))
-    {
-        ImGui::PopStyleColor();
-
-        // Populate the combobox values with device names.
-        for (int i = 0; i < N_DEVICES; i++)
-        {
-            link_names[i] = links[i].name;
-        }
-
-        if (ImGui::Combo("Link", logger_selected_link, link_names, IM_ARRAYSIZE(link_names)))
-        {
-        }
-        ImGui::Text("%s Logging Details", links[*logger_selected_link].name);
-
-        if (ImGui::Checkbox("Enable Logging", &links[*logger_selected_link].logging_enabled))
-        {
-            config_edit_flags[*logger_selected_link] |= CONFIG_EDIT_CHANNEL_CONFIG;
-        }
-
-        const char *logging_methods[] = {"LOCAL", "REMOTE"};
-        if (ImGui::Combo("Logging Method", &ui_buffer->logging_type, logging_methods, IM_ARRAYSIZE(logging_methods)))
-        {
-            config_edit_flags[*logger_selected_link] |= CONFIG_EDIT_DEVICE_CONFIG;
-        }
+        ImGui::Text("Colossal V1.3.1 by Abdelkader Madoui.");
     }
     else
     {
@@ -1724,6 +1036,66 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
     else
     {
 
+        ImGui::PopStyleColor();
+    }
+    ImGui::End();
+}
+
+static void ui_plot_window(size_t link_count, Link links[], int selected_link, int selected_tag,
+                           PlotDataBuffer plot_buffers[N_DEVICES][N_CHANNELS], bool open)
+{
+
+    ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+    char plot_window_title[32];
+    sprintf_s(plot_window_title, "Plot Data");
+
+    if (ImGui::Begin(plot_window_title, &open))
+    {
+
+        ImVec2 win_size = ImGui::GetWindowSize();
+        ImVec2 plot_size = {};
+        plot_size.x = 0.95 * win_size.x;
+        plot_size.y = 0.95f * (win_size.y - 150.0f);
+
+        int plot_line_flags = ImPlotLineFlags_None;
+        int plot_flags = ImPlotLineFlags_None | ImPlotFlags_Crosshairs | ImPlotFlags_NoLegend | ImPlotFlags_NoTitle;
+
+        ImGui::PopStyleColor();
+        if (ImPlot::BeginPlot("Tag Plot", plot_size, plot_flags))
+        {
+
+            double *tag_time_data = plot_buffers[selected_link][selected_tag].time_data();
+            double *tag_data = plot_buffers[selected_link][selected_tag].tag_data();
+
+            int tag_data_size = plot_buffers[selected_link][selected_tag].tag_data_size();
+
+            double x_axis_min = 0;
+            double x_axis_max = 60;
+
+            if (tag_data_size != 0 && tag_data[tag_data_size - 1] > 1000000.0)
+            {
+                x_axis_min = tag_time_data[tag_data_size - 1] - 60.0;
+                x_axis_max = tag_time_data[tag_data_size - 1];
+            }
+
+            ImPlot::SetupAxisLimits(ImAxis_X1, x_axis_min, x_axis_max, ImPlotCond_Once);
+
+            ImPlot::GetStyle().UseLocalTime = true;
+            ImPlot::GetStyle().Use24HourClock = true;
+            ImPlot::GetStyle().LineWeight = 3.0f;
+            ImPlot::GetStyle().UseISO8601 = true;
+
+            ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Time);
+            // ImPlot::SetupAxis(ImAxis_X1, NULL, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoGridLines);
+            // ImPlot::SetupAxis(ImAxis_Y1, NULL, ImPlotAxisFlags_AutoFit | ImPlotAxisFlags_NoGridLines);
+
+            ImPlot::PlotLine("Tag_Plot", tag_time_data, tag_data, tag_data_size, plot_line_flags, 0, sizeof(double));
+
+            ImPlot::EndPlot();
+        }
+    }
+    else
+    {
         ImGui::PopStyleColor();
     }
     ImGui::End();
@@ -2371,6 +1743,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
     }
     ImGui::End();
 }
+
 static void glfw_error_callback(int error, const char *description);
 
 struct CurlMemoryStruct
@@ -2457,7 +1830,7 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
     // monitor_yscale = mode->height;
 
     // printf("%d, %d\n", monitor_xscale, monitor_yscale);
-    GLFWwindow *window = glfwCreateWindow(mode->width, mode->height - 60, "Colossal 1.2", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(mode->width, mode->height - 60, "Colossal V1.3", nullptr, nullptr);
 
     if (window == nullptr)
     {
@@ -2623,7 +1996,8 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
     //
     // Thread handles.
     thrd_t th[N_DEVICES];
-    thrd_t logging_th[N_DEVICES];
+    // Plot buffers
+    PlotDataBuffer plot_buffers[N_DEVICES][N_CHANNELS];
     // Mutexes to use
     mtx_t mtxes[N_DEVICES];
     // Ring buffer for each device.
@@ -2854,8 +2228,21 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
                 // value if the buffer is full.
                 if (buf_peek_last(&buf[i], &links[i]))
                 {
-                    // TODO
                     // do something
+                    // Push latest data to plot buffers.
+                    // This could be improved.
+                    for (int j = 0; j < N_CHANNELS; j++)
+                    {
+                        if (links[i].tags[j].enabled && links[i].timestamp > 0 && !links[i].is_error)
+                        {
+                            plot_buffers[i][j].push_value((double)links[i].tags[j].tag_value.real_value,
+                                                          (double)cur_timestamp);
+                        }
+                        else
+                        {
+                            plot_buffers[i][j].push_value((double)NAN, (double)cur_timestamp);
+                        }
+                    }
                 }
             }
             for (int i = 0; i < N_EVALS; i++)
@@ -2891,8 +2278,8 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
             }
             if (ImGui::BeginMenu("Data"))
             {
-                ImGui::MenuItem("Data Export", NULL, &menu_state.tag_export);
-                ImGui::MenuItem("Tag Plot", NULL, &menu_state.plot_menu);
+                // ImGui::MenuItem("Data Export", NULL, &menu_state.tag_export);
+                // ImGui::MenuItem("Tag Plot", NULL, &menu_state.plot_menu);
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("View"))
@@ -2902,52 +2289,32 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
             }
             if (ImGui::BeginMenu("Help"))
             {
+                ImGui::MenuItem("About", NULL, &menu_state.about);
                 ImGui::EndMenu();
             }
             ImGui::SameLine(ImGui::GetWindowWidth() - 70.0);
 
-            // char minimize_main_window_buf[8];
-            // sprintf(minimize_main_window_buf, "%s",
-            // ICON_FA_WINDOW_MINIMIZE); if
-            // (ImGui::Button(minimize_main_window_buf)) {
-            //     glfwIconifyWindow(window);
-            // }
-            // char close_main_window_buf[8];
-            // sprintf(close_main_window_buf, "%s", ICON_FA_WINDOW_CLOSE);
-            // if (ImGui::Button(close_main_window_buf)) {
-            //     glfwSetWindowShouldClose(window, true);
-            // }
             ImGui::EndMainMenuBar();
         }
         //
-        // Plot menu
-        if (menu_state.plot_menu)
-        {
-            ui_plot_window(N_DEVICES, &records, &menu_state.plot_menu, selected_link_index, selected_tag_index,
-                           implot_style, links);
-        }
 
-        if (menu_state.tag_export)
-        {
-            ui_export_data_window(N_DEVICES, links, &records, &menu_state.tag_export);
-        }
+        // if (menu_state.tag_displays)
+        // {
+        //     for (int i = 0; i < N_TAG_DISPLAYS; i++)
+        //     {
+        //         ui_tag_display(N_DEVICES, links, hmi_display, i, buf, &menu_state.tag_displays, display_font,
+        //                        regular_font, icons);
+        //     }
+        // }
 
-        if (menu_state.tag_displays)
-        {
-            for (int i = 0; i < N_TAG_DISPLAYS; i++)
-            {
-                ui_tag_display(N_DEVICES, links, hmi_display, i, buf, &menu_state.tag_displays, display_font,
-                               regular_font, icons);
-            }
-        }
-        // Logger options window
-        if (menu_state.logging_menu)
-        {
-            ui_loggers_window(N_DEVICES, links, ui_link_buffers, &menu_state.logging_menu, &logger_selected_link,
-                              config_edit_flags);
-        }
         // Tag options window. Tag selection is done through the links
         // window table.
+        //
+        if (menu_state.about)
+        {
+            ui_about_window(&menu_state.about);
+        }
+
         if (menu_state.tag_menu)
         {
             ui_tag_window(N_DEVICES, links, ui_link_buffers, &menu_state.tag_menu, config_update, selected_link_index,
@@ -2965,6 +2332,11 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
         {
             ui_evals_window(N_DEVICES, links, N_EVALS, evals, ui_eval_buffer, &menu_state.evals_menu,
                             &selected_eval_index, &eval_config_change);
+        }
+
+        if (true)
+        {
+            ui_plot_window(N_DEVICES, links, selected_link_index, selected_tag_index, plot_buffers, true);
         }
 
         ImGui::Render();
@@ -3192,193 +2564,5 @@ int polling_thread(void *arg)
     }
     // TODO
     // Should clean the links and tags.
-    return EXIT_SUCCESS;
-}
-
-static int logging_thread(void *arg)
-{
-
-    LoggingThreadArg *logging_arg = (LoggingThreadArg *)arg;
-    Link *link = &logging_arg->links[logging_arg->id];
-
-    MYSQL_RES *mysql_res;
-    bool reconnect = false;
-
-    printf("%d\n", logging_arg->id);
-    for (;;)
-    {
-
-        if (link->is_error)
-        {
-            continue;
-        }
-        MYSQL *mysql = mysql_init(NULL);
-
-        if (!mysql_real_connect(mysql, NULL, "root", "root", "mydb", LOG_MARIADB_PORT, NULL, CLIENT_MULTI_STATEMENTS))
-        {
-            mtx_lock(&logging_arg->mtx);
-
-            logging_arg->is_error = true;
-            snprintf(logging_arg->error_msg, sizeof(logging_arg->error_msg), "Failed to connect to database. %s",
-                     mysql_error(mysql));
-
-            fprintf(stderr, "Failed to connect to mariadb. %s\n", mysql_error(mysql));
-
-            mtx_unlock(&logging_arg->mtx);
-
-            mysql_close(mysql);
-
-            continue;
-            reconnect = true;
-        }
-        else
-        {
-            reconnect = false;
-        }
-
-        char create_table_sql[128];
-
-        mtx_lock(&logging_arg->mtx);
-        snprintf(create_table_sql, sizeof(create_table_sql),
-                 "CREATE TABLE IF NOT EXISTS mydb.LINK_%d (id INT PRIMARY "
-                 "KEY UNIQUE NOT NULL AUTO_INCREMENT, timestamp BIGINT(255));",
-                 link->id);
-        printf("CREATE: %s\n", create_table_sql);
-
-        if (mysql_query(mysql, create_table_sql))
-        {
-            logging_arg->is_error = true;
-            snprintf(logging_arg->error_msg, sizeof(logging_arg->error_msg), "Failed to run SQL. %s",
-                     mysql_error(mysql));
-
-            fprintf(stderr, "Failed to run SQL. %s\n", mysql_error(mysql));
-
-            mysql_close(mysql);
-            mtx_unlock(&logging_arg->mtx);
-
-            continue;
-        }
-        else
-        {
-            mysql_res = mysql_store_result(mysql);
-            mysql_free_result(mysql_res);
-        }
-
-        for (int i = 0; i < N_CHANNELS; i++)
-        {
-            char add_column_sql[256];
-            snprintf(add_column_sql, sizeof(add_column_sql),
-                     "ALTER TABLE mydb.LINK_%d ADD COLUMN (TAG_%d BIGINT(255)"
-                     ");",
-                     link->id, link->tags[i].id);
-
-            if (mysql_query(mysql, add_column_sql))
-            {
-                logging_arg->is_error = true;
-                snprintf(logging_arg->error_msg, sizeof(logging_arg->error_msg), "Failed to run SQL. %s",
-                         mysql_error(mysql));
-
-                fprintf(stderr, "Failed to run SQL. %s\n", mysql_error(mysql));
-
-                mysql_res = mysql_store_result(mysql);
-                mysql_free_result(mysql_res);
-            }
-            else
-            {
-                mysql_res = mysql_store_result(mysql);
-                mysql_free_result(mysql_res);
-            }
-        }
-
-        mtx_unlock(&logging_arg->mtx);
-
-        if (reconnect)
-        {
-#if defined(_WIN32)
-
-            Sleep(5000);
-#else
-            sleep(5);
-#endif
-            continue;
-        }
-
-        while (!reconnect)
-        {
-            mtx_lock(&logging_arg->mtx);
-
-            logging_arg->is_error = false;
-            char log_value[2048] = {};
-            snprintf(log_value, sizeof(log_value), "INSERT INTO mydb.LINK_%d SET timestamp=%lu ", link->id,
-                     link->timestamp);
-            // snprintf(log_value, sizeof(log_value), "UPDATE mydb.LINK_1
-            // SET
-            // ");
-
-            for (int i = 0; i < N_CHANNELS; i++)
-            {
-
-                char tag_buf[256] = {};
-
-                if (link->tags[i].enabled)
-                {
-                    Tag tag_val = link->tags[i];
-                    uint64_t val = get_log_value_from_tag_data(tag_val);
-
-                    if (i == N_CHANNELS - 1)
-                    {
-#if defined(_WIN32)
-                        snprintf(tag_buf, sizeof(tag_buf), ",TAG_%d=%llu;", i, val);
-#else
-                        snprintf(tag_buf, sizeof(tag_buf), ",TAG_%d=%lu;", i, val);
-#endif
-                    }
-                    else
-                    {
-#if defined(_WIN32)
-                        snprintf(tag_buf, sizeof(tag_buf), ",TAG_%d=%llu", i, val);
-#else
-                        snprintf(tag_buf, sizeof(tag_buf), ",TAG_%d=%lu", i, val);
-#endif
-                    }
-                }
-                else
-                {
-                    if (i == N_CHANNELS - 1)
-                    {
-                        snprintf(tag_buf, sizeof(tag_buf), ",TAG_%d=NULL;", i);
-                    }
-                    else
-                    {
-                        snprintf(tag_buf, sizeof(tag_buf), ",TAG_%d=NULL", i);
-                    }
-                }
-                strncat(log_value, tag_buf, strlen(tag_buf));
-            }
-
-            if (mysql_query(mysql, log_value))
-            {
-                logging_arg->is_error = true;
-                snprintf(logging_arg->error_msg, sizeof(logging_arg->error_msg), "Failed to run SQL. %s",
-                         mysql_error(mysql));
-                fprintf(stderr, "Failed to run SQL. %s\nSQL: %s", mysql_error(mysql), log_value);
-                mysql_res = mysql_store_result(mysql);
-                mysql_free_result(mysql_res);
-            }
-            else
-            {
-                mysql_res = mysql_store_result(mysql);
-                mysql_free_result(mysql_res);
-            }
-            mtx_unlock(&logging_arg->mtx);
-
-#if defined(_WIN32)
-            Sleep(1000);
-#else
-            sleep(1);
-#endif
-        }
-        mysql_close(mysql);
-    }
     return EXIT_SUCCESS;
 }

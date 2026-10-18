@@ -50,12 +50,11 @@ bool buf_put(Buffer *buf_ptr, Link data)
 {
     mtx_lock(&buf_ptr->mtx);
 
-    // If the buffer is full wait for cnd.
-    while (buf_ptr->count == buf_ptr->size)
-    {
-        mtx_unlock(&buf_ptr->mtx);
-        return false;
-    }
+    // while (buf_ptr->count == buf_ptr->size)
+    // {
+    //     mtx_unlock(&buf_ptr->mtx);
+    //     return false;
+    // }
     // Insert new product at tip.
     // Save the tags value to the respective allocated space.
     for (size_t i = 0; i < N_CHANNELS; i++)
@@ -85,9 +84,6 @@ bool buf_put(Buffer *buf_ptr, Link data)
 /// If the buffer is empty, wait sec * seconds.
 bool buf_get(Buffer *buf_ptr, Link *data_ptr, int sec)
 {
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC); // current time.
-    ts.tv_sec += sec;
 
     mtx_lock(&buf_ptr->mtx);
 
@@ -110,7 +106,6 @@ bool buf_get(Buffer *buf_ptr, Link *data_ptr, int sec)
     --buf_ptr->count;
 
     mtx_unlock(&buf_ptr->mtx);
-    cnd_signal(&buf_ptr->cnd_put);
 
     return true;
 }

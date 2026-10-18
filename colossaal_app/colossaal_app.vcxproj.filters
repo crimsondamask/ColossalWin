@@ -60,6 +60,9 @@
     <ClCompile Include="..\colossal_cpp\eval.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\colossal_cpp\plot_buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\colossal_cpp\colossal.h">
@@ -150,6 +153,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\colossal_cpp\nfd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\colossal_cpp\plot_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
