@@ -63,6 +63,8 @@
     <ClInclude Include="..\colossal_cpp\libplctag\libplctag.h" />
     <ClInclude Include="..\colossal_cpp\link.h" />
     <ClInclude Include="..\colossal_cpp\nfd.h" />
+    <ClInclude Include="..\colossal_cpp\nlohmann\json.hpp" />
+    <ClInclude Include="..\colossal_cpp\nlohmann\json_fwd.hpp" />
     <ClInclude Include="..\colossal_cpp\plot_buffer.h" />
     <ClInclude Include="..\colossal_cpp\snap7\snap7.h" />
     <ClInclude Include="..\colossal_cpp\stb_image.h" />
