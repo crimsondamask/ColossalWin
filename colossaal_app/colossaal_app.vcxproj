@@ -35,6 +35,7 @@
     <ClCompile Include="..\colossal_cpp\link.cpp" />
     <ClCompile Include="..\colossal_cpp\plot_buffer.cpp" />
     <ClCompile Include="..\colossal_cpp\snap7\snap7.cpp" />
+    <ClCompile Include="Logger.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\civetweb\include\CivetServer.h" />
@@ -68,6 +69,7 @@
     <ClInclude Include="..\colossal_cpp\plot_buffer.h" />
     <ClInclude Include="..\colossal_cpp\snap7\snap7.h" />
     <ClInclude Include="..\colossal_cpp\stb_image.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
   </ItemGroup>

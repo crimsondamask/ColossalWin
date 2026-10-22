@@ -538,7 +538,7 @@ static bool load_config(Link links[])
 	return true;
 }
 
-static bool load_texture_from_memory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
+static bool loadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
 {
 	int image_width = 0;
 	int image_height = 0;
@@ -582,7 +582,7 @@ static bool loadTextureDataFromFile(std::filesystem::path filePath, GLuint* outT
 	std::vector<char> buffer(fileSize);
 	if (file.read(buffer.data(), fileSize))
 	{
-		bool ret = load_texture_from_memory(buffer.data(), fileSize, outTexture, outWidth, outHeight);
+		bool ret = loadTextureFromMemory(buffer.data(), fileSize, outTexture, outWidth, outHeight);
 		return ret;
 	}
 	else
