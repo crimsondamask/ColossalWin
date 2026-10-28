@@ -1,10 +1,8 @@
 [
   {
-    "name": "PLC_0",
-    "tk": "PL",
+    "name": "PLC_TCP",
+    "tk": "LK0:",
     "protocol": 0,
-    "url": "http://127.0.0.1:8181/api/v3/write_lp?db=colossal&precision=second",
-    "token": "apiv3_VJSoTa7OaIRjYXweq0kNJY2gA2UlVcqh-knb8oOJoSpuU3QFfqrtlZk5NvJ-xviVJz8Pp0bSkjntbdBqGHFUKQ",
     "logging": 0,
     "link_config": {
       "mb_tcp_config": {
@@ -13,92 +11,35 @@
       },
       "mb_serial_config": {
         "serial_port": "COM3",
-	"slave": 1,
         "baudrate": 9600,
         "parity": "N"
       },
       "eip_config": {
-        "ip": "192.168.1.10"
+        "ip": "192.168.1.11",
+        "path": "1.0"
       },
       "s7_config": {
-        "ip": "192.168.0.1",
+        "ip": "192.168.1.12",
         "rack": 0,
         "slot": 1
       }
     },
     "tags": [
       {
-        "name": "PIT-1001",
-        "description": "Configured tag.",
-        "unit": "BARG",
-        "enabled": 1,
-        "logged": 1,
-        "value_type": 0,
-        "tag_address": {
-          "mb_address": 8,
-          "ab_address": {
-            "tag": "AB_TAG"
-          },
-          "s7_address": {
-            "db": 5,
-            "start": 12,
-            "start_bit": 0
-          }
-        }
-      },
-      {
-        "name": "PIT-1002",
-        "description": "Configured tag.",
-        "unit": "BARG",
-        "enabled": 1,
-        "logged": 1,
+        "name": "TIT-001",
+        "description": "Sample temperature",
+        "unit": "C",
+        "enabled": true,
+        "logged": true,
         "value_type": 1,
         "tag_address": {
-          "mb_address": 10,
+          "mb_address": 100,
           "ab_address": {
-            "tag": "AB_TAG"
+            "tag": "Temperature"
           },
           "s7_address": {
-            "db": 5,
-            "start": 12,
-            "start_bit": 0
-          }
-        }
-      },
-      {
-        "name": "TAG_2",
-        "description": "Configured tag.",
-        "unit": "N/A",
-        "enabled": 0,
-        "logged": 1,
-        "value_type": 1,
-        "tag_address": {
-          "mb_address": 12,
-          "ab_address": {
-            "tag": "AB_TAG"
-          },
-          "s7_address": {
-            "db": 5,
-            "start": 12,
-            "start_bit": 0
-          }
-        }
-      },
-      {
-        "name": "TAG_3",
-        "description": "Configured tag.",
-        "unit": "N/A",
-        "enabled": 0,
-        "logged": 1,
-        "value_type": 1,
-        "tag_address": {
-          "mb_address": 13,
-          "ab_address": {
-            "tag": "AB_TAG"
-          },
-          "s7_address": {
-            "db": 5,
-            "start": 12,
+            "db": 1,
+            "start": 0,
             "start_bit": 0
           }
         }
@@ -106,106 +47,46 @@
     ]
   },
   {
-    
-    "name": "PLC_1",
-    "tk": "CL",
-    "protocol": 0,
-    "url": "http://127.0.0.1:8181/api/v3/write_lp?db=colossal&precision=second",
-    "token": "apiv3_VJSoTa7OaIRjYXweq0kNJY2gA2UlVcqh-knb8oOJoSpuU3QFfqrtlZk5NvJ-xviVJz8Pp0bSkjntbdBqGHFUKQ",
+    "name": "PLC_EIP",
+    "tk": "LK1:",
+    "protocol": 2,
     "logging": 0,
     "link_config": {
       "mb_tcp_config": {
-        "ip": "127.0.0.1",
-        "port": 5502
+        "ip": "192.168.1.20",
+        "port": 502
       },
       "mb_serial_config": {
-        "serial_port": "COM3",
-	"slave": 1,
-        "baudrate": 9600,
-        "parity": "N"
+        "serial_port": "COM4",
+        "baudrate": 19200,
+        "parity": "E"
       },
       "eip_config": {
-        "ip": "192.168.1.10"
+        "ip": "192.168.1.21",
+        "path": "1.0"
       },
       "s7_config": {
-        "ip": "192.168.0.1",
+        "ip": "192.168.1.22",
         "rack": 0,
-        "slot": 1
+        "slot": 2
       }
     },
     "tags": [
       {
-        "name": "TAG_0",
-        "description": "Configured tag.",
-        "unit": "N/A",
-        "enabled": 0,
-        "logged": 1,
-        "value_type": 0,
+        "name": "MotorRunning",
+        "description": "Motor running status",
+        "unit": "bool",
+        "enabled": true,
+        "logged": false,
+        "value_type": 2,
         "tag_address": {
-          "mb_address": 8,
+          "mb_address": 200,
           "ab_address": {
-            "tag": "AB_TAG"
+            "tag": "MotorRunning"
           },
           "s7_address": {
-            "db": 5,
-            "start": 12,
-            "start_bit": 0
-          }
-        }
-      },
-      {
-        "name": "TAG_1",
-        "description": "Configured tag.",
-        "unit": "N/A",
-        "enabled": 0,
-        "logged": 1,
-        "value_type": 1,
-        "tag_address": {
-          "mb_address": 10,
-          "ab_address": {
-            "tag": "AB_TAG"
-          },
-          "s7_address": {
-            "db": 5,
-            "start": 12,
-            "start_bit": 0
-          }
-        }
-      },
-      {
-        "name": "TAG_2",
-        "description": "Configured tag.",
-        "unit": "N/A",
-        "enabled": 0,
-        "logged": 1,
-        "value_type": 1,
-        "tag_address": {
-          "mb_address": 12,
-          "ab_address": {
-            "tag": "AB_TAG"
-          },
-          "s7_address": {
-            "db": 5,
-            "start": 12,
-            "start_bit": 0
-          }
-        }
-      },
-      {
-        "name": "TAG_3",
-        "description": "Configured tag.",
-        "unit": "N/A",
-        "enabled": 0,
-        "logged": 1,
-        "value_type": 1,
-        "tag_address": {
-          "mb_address": 13,
-          "ab_address": {
-            "tag": "AB_TAG"
-          },
-          "s7_address": {
-            "db": 5,
-            "start": 12,
+            "db": 1,
+            "start": 2,
             "start_bit": 0
           }
         }
@@ -213,4 +94,3 @@
     ]
   }
 ]
-

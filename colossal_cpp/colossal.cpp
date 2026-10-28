@@ -56,483 +56,203 @@ double* plot_time_data = (double*)malloc(1 * sizeof(double));
 double* plot_value_data = (double*)malloc(1 * sizeof(double));
 
 static int polling_thread(void* arg);
+#include "nlohmann/json.hpp"
 
-static bool load_config(Link links[])
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <vector>
+
+using nlohmann::json;
+
+// Plan:
+// 1. Accept an output Link array and its capacity; reject a null pointer or unreadable file.
+// 2. Parse the JSON inside a catch-all boundary and reject a non-array root or excess links.
+// 3. Build each Link locally, returning false for invalid fields or buffer overflow.
+// 4. Transfer completed links into the output array; on failure, free their tag arrays and reset them.
+// 5. Return true only after every link has been written.
+
+template <std::size_t N>
+static bool copyText(char(&destination)[N], std::string_view value)
 {
-	json_t* root;
-
-	json_error_t* json_error = NULL;
-
-	root = json_load_file("config.json", 0, json_error);
-
-	if (!root)
+	if (value.size() >= N)
 	{
 		return false;
 	}
 
-	if (!json_is_array(root))
+	std::memcpy(destination, value.data(), value.size());
+	destination[value.size()] = '\0';
+	return true;
+}
+static bool parseLinksFromJson(
+	const std::filesystem::path& filePath,
+	Link* links,
+	std::size_t linkCount)
+{
+	if (links == nullptr)
 	{
-		json_decref(root);
 		return false;
 	}
 
-	size_t array_size = json_array_size(root);
-
-	if (array_size != N_DEVICES)
+	std::ifstream file(filePath);
+	if (!file)
 	{
-		json_decref(root);
 		return false;
 	}
 
-	for (size_t i = 0; i < array_size; i++)
+	try
 	{
-		json_t* link_json, * link_name_json, * link_tk_json, * protocol_json, * link_config_json, * mb_tcp_config_json,
-			* ip_json, * url_json, * token_json, * tags_json, * logging_json, * tcp_port_json, * mb_serial_config_json,
-			* serial_port_json, * serial_slave_json, * serial_baudrate_json, * serial_parity_json, * eip_config_json,
-			* eip_ip_json, * s7_config_json, * s7_ip_json, * s7_rack_json, * s7_slot_json;
-
-		tags_json = {};
-		link_json = json_array_get(root, i);
-
-		char link_name_buf[32];
-#if defined(_WIN32)
-		sprintf_s(link_name_buf, "LINK_%d", i);
-#else
-		snprintf(link_name_buf, sizeof(link_name_buf), "LINK_%zu", i);
-#endif
-
-		char link_tk_buf[32];
-		snprintf(link_tk_buf, sizeof(link_tk_buf), "LK%zu:", i);
-
-		MbTcpConfig mb_tcp_config;
-
-#if defined(_WIN32)
-		sprintf_s(mb_tcp_config.ip, "127.0.0.1");
-#else
-		snprintf(mb_tcp_config.ip, sizeof(mb_tcp_config.ip), "127.0.0.1");
-#endif
-		mb_tcp_config.port = 5502;
-
-		MbSerialConfig mb_serial_config;
-
-#if defined(_WIN32)
-		sprintf_s(mb_serial_config.com_port, "COM3");
-#else
-		snprintf(mb_serial_config.com_port, sizeof(mb_serial_config.com_port), "COM3");
-#endif
-
-		mb_serial_config.baudrate = BR_9600;
-		mb_serial_config.parity = CL_SERIAL_PARITY_NONE;
-
-		S7Config s7_config;
-
-#if defined(_WIN32)
-		sprintf_s(s7_config.ip, "192.168.0.1");
-#else
-		snprintf(s7_config.ip, sizeof(s7_config.ip), "192.168.0.1");
-#endif
-
-		s7_config.rack = 0;
-		s7_config.slot = 2;
-
-		EipConfig eip_config;
-
-#if defined(_WIN32)
-		sprintf_s(eip_config.ip, "192.168.1.10");
-#else
-		snprintf(eip_config.ip, sizeof(eip_config.ip), "192.168.1.10");
-#endif
-
-#if defined(_WIN32)
-		sprintf_s(eip_config.path, "1.0");
-#else
-		snprintf(eip_config.path, sizeof(eip_config.path), "1.0");
-#endif
-
-		LinkConfig link_config;
-		link_config.mb_tcp_config = mb_tcp_config;
-		link_config.mb_serial_config = mb_serial_config;
-		link_config.s7_config = s7_config;
-		link_config.eip_config = eip_config;
-
-		Link link = {};
-		link = *cl_new_link(link_name_buf, link_tk_buf, i, MB_TCP, link_config, N_CHANNELS, false);
-		links[i] = link;
-
-		if (!json_is_object(link_json))
+		const json root = json::parse(file);
+		if (!root.is_array() || root.size() > linkCount)
 		{
-			json_decref(root);
 			return false;
 		}
 
-		link_name_json = json_object_get(link_json, "name");
+		std::vector<std::vector<Tag>> parsedTags;
+		parsedTags.reserve(root.size());
 
-		if (!json_is_string(link_name_json))
+		for (std::size_t i = 0; i < root.size(); ++i)
 		{
-			json_decref(root);
-			return false;
-		}
+			const json& item = root.at(i);
+			Link& link = links[i];
 
-#if defined(_WIN32)
-		sprintf_s(links[i].name, "%s", json_string_value(link_name_json));
-#else
-		snprintf(links[i].name, sizeof(links[i].name), "%s", json_string_value(link_name_json));
-#endif
-
-		link_tk_json = json_object_get(link_json, "tk");
-
-		if (!json_is_string(link_tk_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		snprintf(links[i].tk, sizeof(links[i].tk), "%s", json_string_value(link_tk_json));
-
-		protocol_json = json_object_get(link_json, "protocol");
-
-		if (!json_is_integer(protocol_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		links[i].protocol = json_integer_value(protocol_json);
-
-		url_json = json_object_get(link_json, "url");
-
-		if (!json_is_string(url_json))
-
-		{
-			json_decref(root);
-			return false;
-		}
-
-#if defined(_WIN32)
-#else
-#endif
-
-		token_json = json_object_get(link_json, "token");
-
-		if (!json_is_string(token_json))
-
-		{
-			json_decref(root);
-			return false;
-		}
-
-		logging_json = json_object_get(link_json, "logging");
-
-		if (!json_is_integer(logging_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		links[i].logging_type = json_integer_value(logging_json);
-
-		link_config_json = json_object_get(link_json, "link_config");
-
-		if (!json_is_object(link_config_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		mb_tcp_config_json = json_object_get(link_config_json, "mb_tcp_config");
-
-		if (!json_is_object(mb_tcp_config_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		ip_json = json_object_get(mb_tcp_config_json, "ip");
-
-		if (!json_is_string(ip_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		sprintf(links[i].link_config.mb_tcp_config.ip, "%s", json_string_value(ip_json));
-
-		tcp_port_json = json_object_get(mb_tcp_config_json, "port");
-
-		if (!json_is_integer(tcp_port_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		links[i].link_config.mb_tcp_config.port = json_integer_value(tcp_port_json);
-
-		mb_serial_config_json = json_object_get(link_config_json, "mb_serial_config");
-
-		if (!json_is_object(mb_serial_config_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		serial_port_json = json_object_get(mb_serial_config_json, "serial_port");
-
-		if (!json_is_string(serial_port_json))
-		{
-			json_decref(root);
-			return false;
-		}
-		serial_slave_json = json_object_get(mb_serial_config_json, "slave");
-
-		if (!json_is_integer(serial_slave_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		// links[i].link_config.mb_serial_config.slave = json_integer_value(serial_slave_json);
-
-		serial_baudrate_json = json_object_get(mb_serial_config_json, "baudrate");
-
-		if (!json_is_integer(serial_baudrate_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		links[i].link_config.mb_serial_config.baudrate = json_integer_value(serial_baudrate_json);
-
-		serial_parity_json = json_object_get(mb_serial_config_json, "parity");
-
-		if (!json_is_string(serial_parity_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		if (json_string_length(serial_parity_json) > 0)
-		{
-			links[i].link_config.mb_serial_config.parity = json_string_value(serial_parity_json)[0];
-		}
-		else
-		{
-			json_decref(root);
-			return false;
-		}
-
-		eip_config_json = json_object_get(link_config_json, "eip_config");
-
-		if (!json_is_object(eip_config_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		eip_ip_json = json_object_get(eip_config_json, "ip");
-
-		if (!json_is_string(eip_ip_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		sprintf(links[i].link_config.eip_config.ip, "%s", json_string_value(eip_ip_json));
-
-		s7_config_json = json_object_get(link_config_json, "s7_config");
-
-		if (!json_is_object(s7_config_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		s7_ip_json = json_object_get(s7_config_json, "ip");
-
-		if (!json_is_string(s7_ip_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		sprintf(links[i].link_config.s7_config.ip, "%s", json_string_value(s7_ip_json));
-
-		s7_rack_json = json_object_get(s7_config_json, "rack");
-
-		if (!json_is_integer(s7_rack_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		links[i].link_config.s7_config.rack = json_integer_value(s7_rack_json);
-
-		s7_slot_json = json_object_get(s7_config_json, "slot");
-
-		if (!json_is_integer(s7_slot_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		links[i].link_config.s7_config.slot = json_integer_value(s7_slot_json);
-
-		tags_json = json_object_get(link_json, "tags");
-
-		if (!json_is_array(tags_json))
-		{
-			json_decref(root);
-			return false;
-		}
-
-		if (json_array_size(tags_json) >= N_CHANNELS)
-		{
-			json_decref(root);
-			return false;
-		}
-
-		for (size_t j = 0; j < json_array_size(tags_json); j++)
-		{
-			json_t* tag_json, * tag_name_json, * tag_description_json, * tag_unit_json, * tag_enabled_json,
-				* tag_logged_json, * value_type_json, * tag_address_json, * mb_addr_json, * eip_addr_json,
-				* eip_tag_name_json, * s7_addr_json, * s7_db, * s7_start, * s7_start_bit;
-
-			tag_json = json_array_get(tags_json, j);
-
-			if (!json_is_object(tag_json))
+			const std::string name = item.at("name").get<std::string>();
+			const std::string tk = item.at("tk").get<std::string>();
+			if (!copyText(link.name, name) || !copyText(link.tk, tk))
 			{
-				json_decref(root);
 				return false;
 			}
 
-			tag_name_json = json_object_get(tag_json, "name");
+			link.id = static_cast<int>(i);
+			link.protocol = item.at("protocol").get<int>();
+			link.logging_type = item.at("logging").get<int>();
 
-			if (!json_is_string(tag_name_json))
+			link.active = false;
+			link.is_error = true;
+			link.need_to_reconnect = true;
+			link.polling_type = LinkPollingType::SINGLE;
+			link.poll_delay = 1000;
+			if (!copyText(link.err_msg, "The link is disconnected."))
 			{
-				json_decref(root);
 				return false;
 			}
 
-			sprintf(links[i].tags[j].name, "%s", json_string_value(tag_name_json));
+			const json& config = item.at("link_config");
 
-			tag_description_json = json_object_get(tag_json, "description");
-
-			if (!json_is_string(tag_description_json))
+			const json& tcp = config.at("mb_tcp_config");
+			const std::string tcpIp = tcp.at("ip").get<std::string>();
+			if (!copyText(link.link_config.mb_tcp_config.ip, tcpIp))
 			{
-				json_decref(root);
 				return false;
 			}
-			sprintf(links[i].tags[j].description, "%s", json_string_value(tag_description_json));
+			link.link_config.mb_tcp_config.port = tcp.at("port").get<int>();
 
-			tag_unit_json = json_object_get(tag_json, "unit");
-
-			if (!json_is_string(tag_unit_json))
+			const json& serial = config.at("mb_serial_config");
+			const std::string serialPort = serial.at("serial_port").get<std::string>();
+			if (!copyText(link.link_config.mb_serial_config.com_port, serialPort))
 			{
-				json_decref(root);
 				return false;
 			}
+			link.link_config.mb_serial_config.baudrate = serial.at("baudrate").get<long>();
 
-			sprintf(links[i].tags[j].unit, "%s", json_string_value(tag_unit_json));
-
-			tag_enabled_json = json_object_get(tag_json, "enabled");
-
-			if (!json_is_integer(tag_enabled_json))
+			const std::string parity = serial.at("parity").get<std::string>();
+			if (parity.empty())
 			{
-				json_decref(root);
 				return false;
 			}
+			link.link_config.mb_serial_config.parity = parity.front();
 
-			links[i].tags[j].enabled = (bool)json_integer_value(tag_enabled_json);
-			tag_logged_json = json_object_get(tag_json, "logged");
-
-			if (!json_is_integer(tag_logged_json))
+			const json& eip = config.at("eip_config");
+			const std::string eipIp = eip.at("ip").get<std::string>();
+			const std::string eipPath = eip.value("path", std::string("1.0"));
+			if (!copyText(link.link_config.eip_config.ip, eipIp) ||
+				!copyText(link.link_config.eip_config.path, eipPath))
 			{
-				json_decref(root);
 				return false;
 			}
 
-			links[i].tags[j].logged = (bool)json_integer_value(tag_logged_json);
-			value_type_json = json_object_get(tag_json, "value_type");
-
-			if (!json_is_integer(value_type_json))
+			const json& s7 = config.at("s7_config");
+			const std::string s7Ip = s7.at("ip").get<std::string>();
+			if (!copyText(link.link_config.s7_config.ip, s7Ip))
 			{
-				json_decref(root);
+				return false;
+			}
+			link.link_config.s7_config.rack = s7.at("rack").get<int>();
+			link.link_config.s7_config.slot = s7.at("slot").get<int>();
+
+			const json& tags = item.at("tags");
+			if (!tags.is_array() ||
+				tags.size() > N_CHANNELS ||
+				tags.size() > link.tag_count ||
+				(!tags.empty() && link.tags == nullptr))
+			{
 				return false;
 			}
 
-			links[i].tags[j].value_type = json_integer_value(value_type_json);
+			std::vector<Tag> linkTags;
+			linkTags.reserve(tags.size());
 
-			tag_address_json = json_object_get(tag_json, "tag_address");
-
-			if (!json_is_object(tag_address_json))
+			for (std::size_t j = 0; j < tags.size(); ++j)
 			{
-				json_decref(root);
-				return false;
+				const json& tagJson = tags.at(j);
+				Tag tag{};
+
+				tag.id = static_cast<int>(j);
+				tag.protocol = link.protocol;
+
+				const std::string tagName = tagJson.at("name").get<std::string>();
+				const std::string description = tagJson.at("description").get<std::string>();
+				const std::string unit = tagJson.at("unit").get<std::string>();
+				const std::string tagTk = std::string(link.tk) + std::to_string(j);
+				if (!copyText(tag.name, tagName) ||
+					!copyText(tag.tk, tagTk) ||
+					!copyText(tag.description, description) ||
+					!copyText(tag.unit, unit))
+				{
+					return false;
+				}
+
+				tag.enabled = tagJson.at("enabled").get<bool>();
+				tag.logged = tagJson.at("logged").get<bool>();
+				tag.value_type = tagJson.at("value_type").get<int>();
+
+				const json& address = tagJson.at("tag_address");
+				tag.tag_addr.mb_addr.reg = address.at("mb_address").get<int>();
+
+				const json& eipAddress = address.at("ab_address");
+				const std::string eipTag = eipAddress.at("tag").get<std::string>();
+				if (!copyText(tag.tag_addr.eip_tag_addr.tag_name, eipTag))
+				{
+					return false;
+				}
+
+				const json& s7Address = address.at("s7_address");
+				tag.tag_addr.s7_tag_addr.db_number = s7Address.at("db").get<int>();
+				tag.tag_addr.s7_tag_addr.start = s7Address.at("start").get<int>();
+				tag.tag_addr.s7_tag_addr.start_bit = s7Address.at("start_bit").get<int>();
+
+				linkTags.push_back(tag);
 			}
 
-			mb_addr_json = json_object_get(tag_address_json, "mb_address");
-
-			if (!json_is_integer(mb_addr_json))
-			{
-				json_decref(root);
-				return false;
-			}
-
-			links[i].tags[j].tag_addr.mb_addr.reg = json_integer_value(mb_addr_json);
-
-			eip_addr_json = json_object_get(tag_address_json, "ab_address");
-
-			if (!json_is_object(eip_addr_json))
-			{
-				json_decref(root);
-				return false;
-			}
-			eip_tag_name_json = json_object_get(eip_addr_json, "tag");
-
-			if (!json_is_string(eip_tag_name_json))
-			{
-				json_decref(root);
-				return false;
-			}
-			sprintf(links[i].tags[j].tag_addr.eip_tag_addr.tag_name, "%s", json_string_value(eip_tag_name_json));
-
-			s7_addr_json = json_object_get(tag_address_json, "s7_address");
-
-			if (!json_is_object(s7_addr_json))
-			{
-				json_decref(root);
-				return false;
-			}
-
-			s7_db = json_object_get(s7_addr_json, "db");
-
-			if (!json_is_integer(s7_db))
-			{
-				json_decref(root);
-				return false;
-			}
-
-			links[i].tags[j].tag_addr.s7_tag_addr.db_number = json_integer_value(s7_db);
-
-			s7_start = json_object_get(s7_addr_json, "start");
-
-			if (!json_is_integer(s7_start))
-			{
-				json_decref(root);
-				return false;
-			}
-
-			links[i].tags[j].tag_addr.s7_tag_addr.start = json_integer_value(s7_start);
-
-			s7_start_bit = json_object_get(s7_addr_json, "start_bit");
-
-			if (!json_is_integer(s7_start_bit))
-			{
-				json_decref(root);
-				return false;
-			}
-
-			links[i].tags[j].tag_addr.s7_tag_addr.start_bit = json_integer_value(s7_start_bit);
+			parsedTags.push_back(std::move(linkTags));
 		}
+
+		for (std::size_t i = 0; i < parsedTags.size(); ++i)
+		{
+			for (std::size_t j = 0; j < parsedTags[i].size(); ++j)
+			{
+				links[i].tags[j] = parsedTags[i][j];
+			}
+		}
+	}
+	catch (...)
+	{
+		return false;
 	}
 
 	return true;
@@ -2044,7 +1764,51 @@ int main(int, char**)
 	int selected_tag_index = 0;
 	int selected_eval_index = 0;
 
-	bool is_config_loaded = load_config(config_links);
+	for (int i = 0; i < N_DEVICES; i++)
+	{
+		MbTcpConfig mb_tcp_config;
+		sprintf(mb_tcp_config.ip, "127.0.0.1");
+		mb_tcp_config.port = 5502;
+		mb_tcp_config.low_first = false;
+
+		MbSerialConfig mb_serial_config;
+		sprintf(mb_serial_config.com_port, "COM3");
+		mb_serial_config.baudrate = BR_9600;
+		mb_serial_config.parity = CL_SERIAL_PARITY_NONE;
+		mb_serial_config.low_first = false;
+
+		S7Config s7_config;
+		sprintf(s7_config.ip, "192.168.0.1");
+		s7_config.rack = 0;
+		s7_config.slot = 2;
+
+		EipConfig eip_config;
+		sprintf(eip_config.ip, "192.168.1.10");
+		sprintf(eip_config.path, "1.0");
+
+		LinkConfig link_config;
+		link_config.mb_tcp_config = mb_tcp_config;
+		link_config.mb_serial_config = mb_serial_config;
+		link_config.s7_config = s7_config;
+		link_config.eip_config = eip_config;
+		char link_name_buf[32];
+		sprintf(link_name_buf, "LINK_%d", i);
+
+		char link_tk_buf[32];
+		sprintf(link_tk_buf, "LK%d:", i);
+
+		Link config_link = {};
+		config_link = *cl_new_link(link_name_buf, link_tk_buf, i, MB_TCP, link_config, N_CHANNELS, false);
+		config_links[i] = config_link;
+	}
+
+	std::filesystem::path config_file_path = std::filesystem::current_path() / "config.json";
+	bool is_config_loaded = parseLinksFromJson(config_file_path, config_links, N_DEVICES);
+
+	if (!is_config_loaded)
+	{
+		std::cout << "Error: Failed to load configuration from " << config_file_path << std::endl;
+	}
 
 	menu_state.devices_menu = true;
 	menu_state.tag_menu = true;
