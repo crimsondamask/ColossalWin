@@ -596,7 +596,7 @@ static void ui_tag_display(size_t link_count, Link links[], HmiDisplay hmi_displ
 	bool* menu_state, ImFont* display_font, ImFont* regular_font, ImFont* icons)
 {
 
-	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
 
 	int tag_id = hmi_display[id].tag_id;
 	int link_id = hmi_display[id].link_id;
@@ -850,7 +850,7 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
 	int config_edit_flags[])
 {
 	Link* ui_buffer = &ui_link_buffers[selected_link_index];
-	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
 	char tag_window_title[32];
 #if defined(_WIN32)
 	sprintf_s(tag_window_title, "Properties");
@@ -1051,7 +1051,7 @@ static void ui_plot_window(size_t link_count, Link links[], int selected_link, i
 	PlotDataBuffer plot_buffers[N_DEVICES][N_CHANNELS], bool open)
 {
 
-	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
 	char plot_window_title[32];
 	sprintf_s(plot_window_title, "Plot Data");
 
@@ -1112,7 +1112,7 @@ static void ui_evals_window(size_t link_count, Link links[], size_t eval_count, 
 	bool* eval_config_change)
 {
 
-	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
 	char evals_window_title_buf[32];
 
 	snprintf(evals_window_title_buf, sizeof(evals_window_title_buf), "Calculations");
@@ -1320,7 +1320,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 	int config_edit_flags[])
 
 {
-	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
 
 	char links_window_title_buf[32];
 #if defined(_WIN32)
@@ -1398,7 +1398,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 				}
 			}
 
-			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
+			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
 			if (ImGui::CollapsingHeader(collapsing_header_title, ImGuiTreeNodeFlags_Bullet))
 			{
 				ImGui::PopStyleColor();
@@ -1933,16 +1933,6 @@ int main(int, char**)
 		style.Colors[ImGuiCol_TitleBgActive].z = 0.56f;
 		style.Colors[ImGuiCol_TitleBgActive].w = 1.0f;
 
-		style.Colors[ImGuiCol_HeaderHovered].x = 0.36f;
-		style.Colors[ImGuiCol_HeaderHovered].y = 0.52;
-		style.Colors[ImGuiCol_HeaderHovered].z = 0.84f;
-		style.Colors[ImGuiCol_HeaderHovered].w = 1.0f;
-
-		style.Colors[ImGuiCol_Header].x = 0.36f;
-		style.Colors[ImGuiCol_Header].y = 0.52;
-		style.Colors[ImGuiCol_Header].z = 0.84f;
-		style.Colors[ImGuiCol_Header].w = 1.0f;
-
 		style.Colors[ImGuiCol_TabHovered].x = 0.14f;
 		style.Colors[ImGuiCol_TabHovered].y = 0.28f;
 		style.Colors[ImGuiCol_TabHovered].z = 0.56f;
@@ -1953,10 +1943,20 @@ int main(int, char**)
 		style.Colors[ImGuiCol_TabSelectedOverline].z = 0.56f;
 		style.Colors[ImGuiCol_TabSelectedOverline].w = 1.0f;
 
-		style.Colors[ImGuiCol_TabSelected].x = 0.14f;
-		style.Colors[ImGuiCol_TabSelected].y = 0.28f;
-		style.Colors[ImGuiCol_TabSelected].z = 0.56f;
+		style.Colors[ImGuiCol_TabSelected].x = 1.0f;
+		style.Colors[ImGuiCol_TabSelected].y = 0.65f;
+		style.Colors[ImGuiCol_TabSelected].z = 0.0f;
 		style.Colors[ImGuiCol_TabSelected].w = 1.0f;
+
+		style.Colors[ImGuiCol_HeaderHovered].x = 1.0f;
+		style.Colors[ImGuiCol_HeaderHovered].y = 0.65f;
+		style.Colors[ImGuiCol_HeaderHovered].z = 0.0f;
+		style.Colors[ImGuiCol_HeaderHovered].w = 0.3f;
+
+		style.Colors[ImGuiCol_Header].x = 1.0f;
+		style.Colors[ImGuiCol_Header].y = 0.65f;
+		style.Colors[ImGuiCol_Header].z = 0.0f;
+		style.Colors[ImGuiCol_Header].w = 1.0f;
 	}
 
 	ImPlotStyle implot_style = ImPlot::GetStyle();
@@ -2185,7 +2185,7 @@ int main(int, char**)
 	//bool ret = load_texture_from_file("colossal.png", &image_texture, &image_width, &image_height);
 	// C++ implementation.
 	// Upgrade
-	bool ret = loadTextureDataFromFile(std::filesystem::path("colossal.png"), &imageTexture, &imageWidth, &imageHeight);
+	bool ret = loadTextureDataFromFile(std::filesystem::path("telecontrol.png"), &imageTexture, &imageWidth, &imageHeight);
 
 	if (!ret)
 	{
@@ -2267,7 +2267,7 @@ int main(int, char**)
 			imageWidth = ImGui::GetContentRegionAvail().x;
 			imageHeight = ImGui::GetContentRegionAvail().y;
 
-			ImGui::Image((ImTextureID)(intptr_t)imageTexture, ImVec2(110.0f, imageHeight + 8.0f));
+			ImGui::Image((ImTextureID)(intptr_t)imageTexture, ImVec2(220.0f, imageHeight + 8.0f));
 
 			if (ImGui::BeginMenu("File"))
 			{

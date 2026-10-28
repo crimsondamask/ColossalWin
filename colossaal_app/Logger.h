@@ -4,6 +4,15 @@
 #include <string>
 #include <vector>
 
+
+enum class DatabaseType
+{
+	SQLite = 0,
+	MySQL = 1,
+	FileDb = 2,
+	// Add more database types as needed
+};
+
 class LoggerTag
 {
 public:
@@ -28,7 +37,7 @@ public:
 	std::string name;
 	std::filesystem::path dbPath;
 
-	Logger(const std::string& name, const std::filesystem::path& dbPath, int dbType, const std::vector<LoggerTag>& slowTags, const std::vector<LoggerTag>& fastTags);
+	Logger(const std::string& name, int dbType, const std::vector<LoggerTag>& slowTags, const std::vector<LoggerTag>& fastTags);
 	~Logger() = default;
 	void addTagToFastLogger(const LoggerTag& tag);
 	void removeTagFromFastLogger(const LoggerTag& tag);

@@ -2,11 +2,12 @@
 #include "sqlite3.h"
 
 
-Logger::Logger(const std::string& name, const std::filesystem::path& dbPath, int dbType, const std::vector<LoggerTag>& slowTags, const std::vector<LoggerTag>& fastTags)
+Logger::Logger(const std::string& name, int dbType, const std::vector<LoggerTag>& slowTags, const std::vector<LoggerTag>& fastTags)
 	: name(name), dbPath(dbPath), dbType(dbType), fastLogger(slowTags), slowLogger(fastTags)
 {
 	enabled = true;
 	isError = false;
+	std::filesystem::path dbDir = dbPath.parent_path();
 }
 
 void Logger::addTagToFastLogger(const LoggerTag& tag)
@@ -26,6 +27,27 @@ void Logger::logFastTags(const Link links[], int linkCount)
 {
 	if (!enabled)
 		return;
+
+	sqlite3* db = nullptr;
+	std::string dbPathStr = this->dbPath.string();
+	const char* dbPathCStr = dbPathStr.c_str();
+
+	if (dbType == static_cast<int>(DatabaseType::SQLite)) // SQLite
+	{
+		if (sqlite3_open(dbPathCStr, &db) != SQLITE_OK)
+		{
+			isError = true;
+			errMsg = "Failed to open SQLite database: " + std::string(sqlite3_errmsg(db));
+			return;
+		}
+	}
+	else
+	{
+		isError = true;
+		errMsg = "Unsupported database type";
+		return;
+	}
+
 	for (auto& tag : fastLogger)
 	{
 		if (tag.linkId < 0 || tag.linkId >= linkCount)
@@ -43,7 +65,7 @@ void Logger::logFastTags(const Link links[], int linkCount)
 }
 
 LoggerTag::LoggerTag(int linkId, int tagId)
-	: linkId(linkId), tagId(tagId) 
+	: linkId(linkId), tagId(tagId)
 {
 	this->name = std::string("");
 	this->enabled = false;
