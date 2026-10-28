@@ -1,0 +1,12 @@
+prefix=C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/vcpkg/pkgs/sqlite3_x64-windows
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: SQLite
+Description: SQL database engine
+Version: 3.51.0
+Libs: -L${libdir} -lsqlite3
+Libs.private: 
+Requires.private: 
+Cflags: -I${includedir}

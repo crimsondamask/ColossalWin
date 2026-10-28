@@ -1,0 +1,2 @@
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/detect_compiler/x64-windows-static-rel/CMakeFiles/edit_cache.dir
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/detect_compiler/x64-windows-static-rel/CMakeFiles/rebuild_cache.dir

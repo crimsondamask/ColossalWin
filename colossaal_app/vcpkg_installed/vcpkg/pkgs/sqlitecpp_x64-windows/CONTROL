@@ -1,0 +1,14 @@
+Package: sqlitecpp
+Version: 3.3.3
+Depends: sqlite3, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 531439999f504cb2db33401dacaf71cfb35092f5cbd15426f77ee259110d163a
+Description: SQLiteC++ (SQLiteCpp) is a smart and easy to use C++ SQLite3 wrapper.
+Default-Features: sqlite
+
+Package: sqlitecpp
+Feature: sqlite
+Architecture: x64-windows
+Multi-Arch: same
+Description: Deprecated; no effects

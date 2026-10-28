@@ -1,0 +1,6 @@
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/sqlite3/x64-windows-static-dbg/CMakeFiles/sqlite3.dir
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/sqlite3/x64-windows-static-dbg/CMakeFiles/edit_cache.dir
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/sqlite3/x64-windows-static-dbg/CMakeFiles/rebuild_cache.dir
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/sqlite3/x64-windows-static-dbg/CMakeFiles/list_install_components.dir
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/sqlite3/x64-windows-static-dbg/CMakeFiles/install.dir
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/sqlite3/x64-windows-static-dbg/CMakeFiles/install/local.dir

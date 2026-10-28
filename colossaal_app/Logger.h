@@ -16,10 +16,9 @@ public:
 	int valueType;
 	TagValue tagValue;
 
-	LoggerTag(int linkId, int tagId, const std::string& name, const std::string& description, const std::string& unit, bool enabled, int valueType, const TagValue& tagValue)
-		: linkId(linkId), tagId(tagId), name(name), description(description), unit(unit), enabled(enabled), valueType(valueType), tagValue(tagValue)
-	{
-	}
+	LoggerTag(int linkId, int tagId);
+	LoggerTag LoggerTagFromLinkTag(const Link& link, int tagId);
+	void copyFromLinkTag(const Link& link, int tagId);
 };
 
 class Logger

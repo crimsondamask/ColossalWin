@@ -1,0 +1,7 @@
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlite3_x64-windows-static/lib/sqlite3.lib
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlite3_x64-windows-static/include/sqlite3.h
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlite3_x64-windows-static/include/sqlite3ext.h
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlite3_x64-windows-static/include/sqlite3-vcpkg-config.h
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlite3_x64-windows-static/share/unofficial-sqlite3/unofficial-sqlite3-targets.cmake
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlite3_x64-windows-static/share/unofficial-sqlite3/unofficial-sqlite3-targets-release.cmake
+C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlite3_x64-windows-static/lib/pkgconfig/sqlite3.pc

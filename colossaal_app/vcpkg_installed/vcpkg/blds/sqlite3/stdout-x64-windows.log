@@ -1,0 +1,18 @@
+Downloading https://sqlite.org/2025/sqlite-autoconf-3510000.tar.gz -> sqlite-autoconf-3510000.tar.gz
+Successfully downloaded sqlite-autoconf-3510000.tar.gz
+-- Extracting source C:/Users/Admin/AppData/Local/vcpkg/downloads/sqlite-autoconf-3510000.tar.gz
+-- Applying patch fix-arm-uwp.patch
+-- Applying patch add-config-include.patch
+-- Using source at C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/vcpkg/blds/sqlite3/src/nf-3510000-c7baf9d080.clean
+-- Configuring x64-windows
+-- Building x64-windows-dbg
+-- Building x64-windows-rel
+-- Fixing pkgconfig file: C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/vcpkg/pkgs/sqlite3_x64-windows/lib/pkgconfig/sqlite3.pc
+Downloading msys2-mingw-w64-x86_64-pkgconf-1~2.4.3-1-any.pkg.tar.zst, trying https://mirror.msys2.org/mingw/mingw64/mingw-w64-x86_64-pkgconf-1~2.4.3-1-any.pkg.tar.zst
+Successfully downloaded msys2-mingw-w64-x86_64-pkgconf-1~2.4.3-1-any.pkg.tar.zst
+Downloading msys2-msys2-runtime-3.6.2-2-x86_64.pkg.tar.zst, trying https://mirror.msys2.org/msys/x86_64/msys2-runtime-3.6.2-2-x86_64.pkg.tar.zst
+Successfully downloaded msys2-msys2-runtime-3.6.2-2-x86_64.pkg.tar.zst
+-- Using msys root at C:/Users/Admin/AppData/Local/vcpkg/downloads/tools/msys2/9272adbcaf19caef
+-- Fixing pkgconfig file: C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/vcpkg/pkgs/sqlite3_x64-windows/debug/lib/pkgconfig/sqlite3.pc
+-- Installing: C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/vcpkg/pkgs/sqlite3_x64-windows/share/sqlite3/usage
+-- Performing post-build validation

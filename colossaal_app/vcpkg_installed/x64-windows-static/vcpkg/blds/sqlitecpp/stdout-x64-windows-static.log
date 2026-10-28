@@ -1,0 +1,10 @@
+-- Using cached SRombauts-SQLiteCpp-3.3.3.tar.gz
+-- Extracting source C:/Users/Admin/AppData/Local/vcpkg/downloads/SRombauts-SQLiteCpp-3.3.3.tar.gz
+-- Applying patch fix_dependency.patch
+-- Applying patch add_runtime_destination.patch
+-- Using source at C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/blds/sqlitecpp/src/3.3.3-984c301c61.clean
+-- Configuring x64-windows-static
+-- Building x64-windows-static-dbg
+-- Building x64-windows-static-rel
+-- Installing: C:/Users/Admin/Desktop/code/colossal-740848fa89/colossaal_app/vcpkg_installed/x64-windows-static/vcpkg/pkgs/sqlitecpp_x64-windows-static/share/sqlitecpp/copyright
+-- Performing post-build validation
