@@ -33,7 +33,7 @@
         "logged": true,
         "value_type": 1,
         "tag_address": {
-          "mb_address": 100,
+          "mb_address": 2,
           "ab_address": {
             "tag": "Temperature"
           },
@@ -43,6 +43,25 @@
             "start_bit": 0
           }
         }
+      },
+      {
+        "description": "Sample temperature",
+        "enabled": true,
+        "logged": true,
+        "name": "TIT-002",
+        "tag_address": {
+          "mb_address": 4,
+          "ab_address": {
+            "tag": "Temperature"
+          },
+          "s7_address": {
+            "db": 1,
+            "start": 0,
+            "start_bit": 0
+          }
+        },
+        "unit": "C",
+        "value_type": 1
       }
     ]
   },
@@ -73,16 +92,16 @@
     },
     "tags": [
       {
-        "name": "MotorRunning",
+        "name": "PIT-1003",
         "description": "Motor running status",
         "unit": "bool",
         "enabled": true,
         "logged": false,
-        "value_type": 2,
+        "value_type": 1,
         "tag_address": {
-          "mb_address": 200,
+          "mb_address": 2,
           "ab_address": {
-            "tag": "MotorRunning"
+            "tag": "AI_DATA[0].Scaled"
           },
           "s7_address": {
             "db": 1,

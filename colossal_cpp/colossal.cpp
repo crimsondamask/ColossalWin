@@ -70,13 +70,6 @@ static int polling_thread(void* arg);
 
 using nlohmann::json;
 
-// Plan:
-// 1. Accept an output Link array and its capacity; reject a null pointer or unreadable file.
-// 2. Parse the JSON inside a catch-all boundary and reject a non-array root or excess links.
-// 3. Build each Link locally, returning false for invalid fields or buffer overflow.
-// 4. Transfer completed links into the output array; on failure, free their tag arrays and reset them.
-// 5. Return true only after every link has been written.
-
 template <std::size_t N>
 static bool copyText(char(&destination)[N], std::string_view value)
 {
@@ -89,6 +82,12 @@ static bool copyText(char(&destination)[N], std::string_view value)
 	destination[value.size()] = '\0';
 	return true;
 }
+
+// Parses the links from a JSON file and populates the provided array of Link structures.
+// The function takes an initialized array of Link structures.
+// Returns true if the parsing is successful, false otherwise.
+// The exception handling is done internally, and the function will return false if any error occurs during parsing.
+// but it will not rollback the changes made to the links array in case of an error. The caller should handle any necessary cleanup or rollback if needed.
 static bool parseLinksFromJson(
 	const std::filesystem::path& filePath,
 	Link* links,
@@ -1065,57 +1064,26 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 
 			// A little hack to show an asterics when the config is edited.
 			char collapsing_header_title[2048];
-			if (config_edit_flags[i])
+			if (link->protocol == SIEMENS_S7)
 			{
 
-				if (link->protocol == SIEMENS_S7)
-				{
-
 #if defined(_WIN32)
-					sprintf_s(collapsing_header_title, "%.2lf (us) %s %s %s Config *", link->elapsed_time * 1000000.0,
-						link->name, link->link_config.s7_config.cpu_info.ModuleTypeName,
-						link->link_config.s7_config.cpu_info.SerialNumber);
+				sprintf_s(collapsing_header_title, "%s %s %s Config", 
+					link->name, link->link_config.s7_config.cpu_info.ModuleTypeName,
+					link->link_config.s7_config.cpu_info.ModuleName);
 #else
-					snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s %s %s Config *", link->name,
-						link->link_config.s7_config.cpu_info.ModuleTypeName,
-						link->link_config.s7_config.cpu_info.SerialNumber);
+				snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s %s %s Config", link->name,
+					link->link_config.s7_config.cpu_info.ModuleTypeName,
+					link->link_config.s7_config.cpu_info.ModuleName);
 #endif
-				}
-				else
-				{
-
-#if defined(_WIN32)
-					sprintf_s(collapsing_header_title, "%.2lf (us) %s Config *", link->elapsed_time * 1000000.0,
-						link->name);
-#else
-					snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s Config *", link->name);
-#endif
-				}
 			}
 			else
 			{
-				if (link->protocol == SIEMENS_S7)
-				{
-
 #if defined(_WIN32)
-					sprintf_s(collapsing_header_title, "%.2lf (us) %s %s %s Config", link->elapsed_time * 1000000.0,
-						link->name, link->link_config.s7_config.cpu_info.ModuleTypeName,
-						link->link_config.s7_config.cpu_info.ModuleName);
+				sprintf_s(collapsing_header_title, "%s Config", link->name);
 #else
-					snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s %s %s Config", link->name,
-						link->link_config.s7_config.cpu_info.ModuleTypeName,
-						link->link_config.s7_config.cpu_info.ModuleName);
+				snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s Config", link->name);
 #endif
-				}
-				else
-				{
-#if defined(_WIN32)
-					sprintf_s(collapsing_header_title, "%.2lf (us) %s Config", link->elapsed_time * 1000000.0,
-						link->name);
-#else
-					snprintf(collapsing_header_title, sizeof(collapsing_header_title), "%s Config", link->name);
-#endif
-				}
 			}
 
 			ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
@@ -1343,6 +1311,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 				}
 			}
 
+			ImGui::Text("Elapsed time: %0.2lf (us).", link->elapsed_time * 1000000.0);
 			if (link->is_error)
 			{
 				ImGui::Text("Link ID: %d. ERROR: %s", link->id, link->err_msg);
@@ -1764,6 +1733,7 @@ int main(int, char**)
 	int selected_tag_index = 0;
 	int selected_eval_index = 0;
 
+	// Initialize the links for the config with default values.
 	for (int i = 0; i < N_DEVICES; i++)
 	{
 		MbTcpConfig mb_tcp_config;
@@ -1803,6 +1773,8 @@ int main(int, char**)
 	}
 
 	std::filesystem::path config_file_path = std::filesystem::current_path() / "config.json";
+	// Load the configuration from the JSON file.
+	// If this returns false, the config_links should be discarded and the default links should be used.
 	bool is_config_loaded = parseLinksFromJson(config_file_path, config_links, N_DEVICES);
 
 	if (!is_config_loaded)
