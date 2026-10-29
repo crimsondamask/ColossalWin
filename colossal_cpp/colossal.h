@@ -37,6 +37,7 @@ typedef struct LoggingThreadArg
 
 typedef struct UiMenuState
 {
+    bool show_hmi;
     bool devices_menu;
     bool tag_menu;
     bool help_menu;

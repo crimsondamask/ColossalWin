@@ -767,14 +767,14 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
 }
 
 static void ui_plot_window(size_t link_count, Link links[], int selected_link, int selected_tag,
-	PlotDataBuffer plot_buffers[N_DEVICES][N_CHANNELS], bool open)
+	PlotDataBuffer plot_buffers[N_DEVICES][N_CHANNELS], bool* open)
 {
 
 	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
 	char plot_window_title[32];
 	sprintf_s(plot_window_title, "Plot Data");
 
-	if (ImGui::Begin(plot_window_title, &open))
+	if (ImGui::Begin(plot_window_title, open))
 	{
 
 		ImVec2 win_size = ImGui::GetWindowSize();
@@ -1068,7 +1068,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 			{
 
 #if defined(_WIN32)
-				sprintf_s(collapsing_header_title, "%s %s %s Config", 
+				sprintf_s(collapsing_header_title, "%s %s %s Config",
 					link->name, link->link_config.s7_config.cpu_info.ModuleTypeName,
 					link->link_config.s7_config.cpu_info.ModuleName);
 #else
@@ -1441,6 +1441,8 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 
 static void glfw_error_callback(int error, const char* description);
 
+static void UiShowFlowMeter(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Tag tag, bool isError);
+
 struct CurlMemoryStruct
 {
 	char* memory;
@@ -1711,19 +1713,9 @@ int main(int, char**)
 	ClEval evals[N_EVALS];
 	ClEval ui_eval_buffer[N_EVALS];
 	// Data type to hold the result of a fetch query from the DB.
-	RecordQuery records = {};
 	unsigned long last_buf_get = 0;
 
-	records.rows = (RecordRow*)malloc(sizeof(RecordRow));
-	snprintf(records.start, sizeof(records.start), "2025/09/23 12:00:00");
-	snprintf(records.end, sizeof(records.end), "2025/09/23 14:00:00");
-	snprintf(records.error_msg, sizeof(records.error_msg), "");
-	snprintf(records.cols, sizeof(records.cols), "TAG_0, TAG_1");
-	records.num_fields = 6;
-	records.fields = NULL;
 
-	// Tag HMI display config
-	HmiDisplay hmi_display[N_TAG_DISPLAYS];
 	UiMenuState menu_state = {};
 	int config_edit_flags[N_DEVICES] = {};
 	bool eval_config_change = false;
@@ -1907,29 +1899,28 @@ int main(int, char**)
 		snprintf((&ui_eval_buffer[i])->tk, sizeof((&ui_eval_buffer[i])->tk), "EV%d", i);
 	}
 
-	for (int i = 0; i < N_TAG_DISPLAYS; i++)
-	{
-		hmi_display[i].tag_id = i;
-		hmi_display[i].link_id = 0;
-		hmi_display[i].show_plot = false;
-		hmi_display[i].plot_color = ImVec4(0, 255, 0, 255);
-	}
 
-	int imageWidth = 0;
-	int imageHeight = 0;
-	GLuint imageTexture = 0;
-	//bool ret = load_texture_from_file("colossal.png", &image_texture, &image_width, &image_height);
+	// Logo to show at the upper left corner of the main menu bar.
+	int LogoimageWidth = 0;
+	int LogoimageHeight = 0;
+	GLuint LogoimageTexture = 0;
+	
 	// C++ implementation.
 	// Upgrade
-	bool ret = loadTextureDataFromFile(std::filesystem::path("telecontrol.png"), &imageTexture, &imageWidth, &imageHeight);
-
-	if (!ret)
+	if (!loadTextureDataFromFile(std::filesystem::path("telecontrol.png"), &LogoimageTexture, &LogoimageWidth, &LogoimageHeight))
 	{
-		// TODO:
-		// Better error handling.
 		return EXIT_FAILURE;
 	}
 
+	int flowMeterImageWidth = 0;
+	int flowMeterImageHeight = 0;
+	GLuint flowMeterImageTexture = 0;
+	
+	if (!loadTextureDataFromFile(std::filesystem::path("./HmiData/flow_meter.png"), &flowMeterImageTexture, &flowMeterImageWidth, &flowMeterImageHeight))
+	{
+		return EXIT_FAILURE;
+	}
+	
 	// The main loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -2000,10 +1991,10 @@ int main(int, char**)
 		if (ImGui::BeginMainMenuBar())
 		{
 			// Load our images
-			imageWidth = ImGui::GetContentRegionAvail().x;
-			imageHeight = ImGui::GetContentRegionAvail().y;
+			LogoimageWidth = ImGui::GetContentRegionAvail().x;
+			LogoimageHeight = ImGui::GetContentRegionAvail().y;
 
-			ImGui::Image((ImTextureID)(intptr_t)imageTexture, ImVec2(220.0f, imageHeight + 8.0f));
+			ImGui::Image((ImTextureID)(intptr_t)LogoimageTexture, ImVec2(220.0f, LogoimageHeight + 8.0f));
 
 			if (ImGui::BeginMenu("File"))
 			{
@@ -2024,12 +2015,12 @@ int main(int, char**)
 			if (ImGui::BeginMenu("Data"))
 			{
 				// ImGui::MenuItem("Data Export", NULL, &menu_state.tag_export);
-				// ImGui::MenuItem("Tag Plot", NULL, &menu_state.plot_menu);
+				ImGui::MenuItem("Tag Plot", NULL, &menu_state.plot_menu);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("View"))
 			{
-				ImGui::MenuItem("Tag Displays", NULL, &menu_state.tag_displays);
+				ImGui::MenuItem("Show HMI", NULL, &menu_state.show_hmi);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help"))
@@ -2041,47 +2032,44 @@ int main(int, char**)
 
 			ImGui::EndMainMenuBar();
 		}
-		//
 
-		// if (menu_state.tag_displays)
-		// {
-		//     for (int i = 0; i < N_TAG_DISPLAYS; i++)
-		//     {
-		//         ui_tag_display(N_DEVICES, links, hmi_display, i, buf, &menu_state.tag_displays, display_font,
-		//                        regular_font, icons);
-		//     }
-		// }
-
-		// Tag options window. Tag selection is done through the links
-		// window table.
-		//
-		if (menu_state.about)
+		if (!menu_state.show_hmi)
 		{
-			ui_about_window(&menu_state.about);
+			// Tag options window. Tag selection is done through the links
+			// window table.
+			if (menu_state.about)
+			{
+				ui_about_window(&menu_state.about);
+			}
+
+			if (menu_state.tag_menu)
+			{
+				ui_tag_window(N_DEVICES, links, ui_link_buffers, &menu_state.tag_menu, config_update, selected_link_index,
+					&selected_tag_index, config_edit_flags);
+			}
+			// Window containing the different links configs and their
+			// associated tags values.
+			if (menu_state.devices_menu)
+			{
+				ui_links_window(N_DEVICES, links, ui_link_buffers, config_update, &menu_state.devices_menu,
+					&selected_link_index, &selected_tag_index, config_edit_flags);
+			}
+
+			if (menu_state.evals_menu)
+			{
+				ui_evals_window(N_DEVICES, links, N_EVALS, evals, ui_eval_buffer, &menu_state.evals_menu,
+					&selected_eval_index, &eval_config_change);
+			}
+
+			if (menu_state.plot_menu)
+			{
+				ui_plot_window(N_DEVICES, links, selected_link_index, selected_tag_index, plot_buffers, &menu_state.plot_menu);
+			}
 		}
-
-		if (menu_state.tag_menu)
+		else
 		{
-			ui_tag_window(N_DEVICES, links, ui_link_buffers, &menu_state.tag_menu, config_update, selected_link_index,
-				&selected_tag_index, config_edit_flags);
-		}
-		// Window containing the different links configs and their
-		// associated tags values.
-		if (menu_state.devices_menu)
-		{
-			ui_links_window(N_DEVICES, links, ui_link_buffers, config_update, &menu_state.devices_menu,
-				&selected_link_index, &selected_tag_index, config_edit_flags);
-		}
-
-		if (menu_state.evals_menu)
-		{
-			ui_evals_window(N_DEVICES, links, N_EVALS, evals, ui_eval_buffer, &menu_state.evals_menu,
-				&selected_eval_index, &eval_config_change);
-		}
-
-		if (true)
-		{
-			ui_plot_window(N_DEVICES, links, selected_link_index, selected_tag_index, plot_buffers, true);
+			
+			UiShowFlowMeter(flowMeterImageWidth, flowMeterImageHeight, flowMeterImageTexture, display_font, links[0].tags[0], links[0].is_error);
 		}
 
 		ImGui::Render();
@@ -2118,6 +2106,56 @@ int main(int, char**)
 	glfwTerminate();
 
 	return EXIT_SUCCESS;
+}
+
+static void UiShowFlowMeter(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Tag tag, bool isError)
+{
+	ImGui::Begin("HMI_Display");
+
+	ImVec2 p = ImGui::GetCursorScreenPos();
+
+	float tagx = p.x;
+	float tagy = p.y;
+	float tagWidth = 250.0f;
+	float tagHeight = 50.0f;
+	ImVec2 tagRectMin = ImVec2(tagx, tagy);
+	ImVec2 tagRectMax = ImVec2(tagx + tagWidth, tagy + tagHeight);
+	
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+	if (isError)
+	{
+		drawList->AddRectFilled(tagRectMin, tagRectMax, IM_COL32(255, 0, 0, 255), 0.0f);
+		drawList->AddRect(tagRectMin, tagRectMax, IM_COL32(200, 200, 200, 255), 0.0f, 0, 5.0f);
+	}
+	else
+	{
+		drawList->AddRectFilled(tagRectMin, tagRectMax, IM_COL32(0, 0, 0, 255), 0.0f);
+		drawList->AddRect(tagRectMin, tagRectMax, IM_COL32(200, 200, 200, 255), 0.0f, 0, 5.0f);
+	}
+	
+	char tagValueStr[32];
+	sprintf(tagValueStr, "%.2f L/min", tag.tag_value.real_value);
+	
+	
+	ImGui::PushFont(display_font);
+	ImVec2 textSize = ImGui::CalcTextSize(tagValueStr);
+	ImGui::PopFont();
+	
+	ImVec2 textPos = ImVec2(tagx + (tagWidth - textSize.x) * 0.5f, tagy + (tagHeight - textSize.y) * 0.5f);
+	
+	drawList->AddText(display_font, display_font->FontSize, textPos, IM_COL32(255, 255, 255, 255), tagValueStr);
+	ImGui::Dummy(ImVec2(tagWidth, tagHeight + 20.0f)); // Reserve space for the tag display
+	
+	ImVec2 f = ImGui::GetCursorScreenPos();
+	float flowMeterImagex = f.x;
+	float flowMeterImagey = f.y;
+
+	ImVec2 minPos = ImVec2(flowMeterImagex, flowMeterImagey);
+	ImVec2 maxPos = ImVec2(flowMeterImagex + flowMeterImageWidth * 0.5, flowMeterImagey + flowMeterImageHeight * 0.5);
+
+	ImGui::GetWindowDrawList()->AddImage((ImTextureID)(intptr_t)flowMeterImageTexture, minPos, maxPos);
+
+	ImGui::End();
 }
 
 static void glfw_error_callback(int error, const char* description)
