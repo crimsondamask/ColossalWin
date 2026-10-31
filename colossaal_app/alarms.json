@@ -1,0 +1,32 @@
+[
+  {
+    "id": 0,
+    "name": "Low Pressure",
+    "description": "Pressure is below the normal range",
+    "valueType": 1,
+    "linkId": 0,
+    "tagId": 0,
+    "thresholdValue": 20.0,
+    "alarmType": 1
+  },
+  {
+    "id": 1,
+    "name": "High temperature",
+    "description": "Temperature exceeds the normal range",
+    "valueType": 1,
+    "linkId": 0,
+    "tagId": 1,
+    "thresholdValue": 80.0,
+    "alarmType": 2
+  },
+  {
+    "id": 2,
+    "name": "High-high temperature",
+    "description": "Temperature is critically high",
+    "valueType": 1,
+    "linkId": 0,
+    "tagId": 2,
+    "thresholdValue": 95.0,
+    "alarmType": 3
+  }
+]

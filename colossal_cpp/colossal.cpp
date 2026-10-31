@@ -67,6 +67,7 @@ static int polling_thread(void* arg);
 #include <string>
 #include <string_view>
 #include <vector>
+#include "../colossaal_app/ClAlarms.h"
 
 using nlohmann::json;
 
@@ -1694,6 +1695,9 @@ int main(int, char**)
 	// Evaluations array
 	ClEval evals[N_EVALS];
 	ClEval ui_eval_buffer[N_EVALS];
+	
+	ClAlarms alarms(links);
+	
 	// Data type to hold the result of a fetch query from the DB.
 	unsigned long last_buf_get = 0;
 
@@ -1902,6 +1906,13 @@ int main(int, char**)
 	{
 		return EXIT_FAILURE;
 	}
+	
+	// Load alarms configuration from JSON file.
+	if (!alarms.loadJsonAlarms("./alarms.json"))
+	{
+		std::cerr << "Failed to load alarms configuration." << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	// The main loop
 	while (!glfwWindowShouldClose(window))
@@ -1988,6 +1999,8 @@ int main(int, char**)
 				cl_evaluate(&evals[i], evals, links);
 			}
 			last_buf_get = cur_timestamp;
+			
+			alarms.processAlarms();
 		}
 
 		if (ImGui::BeginMainMenuBar())

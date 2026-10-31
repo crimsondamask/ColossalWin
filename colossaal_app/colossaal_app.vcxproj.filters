@@ -72,6 +72,9 @@
     <ClCompile Include="shell.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ClAlarms.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\colossal_cpp\colossal.h">
@@ -180,6 +183,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="sqlite3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClAlarms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
