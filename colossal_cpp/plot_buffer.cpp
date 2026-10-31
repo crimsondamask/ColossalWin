@@ -26,3 +26,9 @@ void PlotDataBuffer::push_value(double value, double timestamp)
     tag_values.push_back(value);
     timestamp_values.push_back(timestamp);
 }
+
+void PlotDataBuffer::clear()
+{
+    tag_values.clear();
+    timestamp_values.clear();
+}

@@ -8,11 +8,11 @@ C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(465,19
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(527,76): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(782,22): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(795,22): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1994,51): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1995,52): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2031,44): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2154,86): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2154,41): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1996,51): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(1997,52): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2033,44): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2128,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2129,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 LINK : warning LNK4067: ambiguous entry point; selected 'mainCRTStartup'
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   colossaal_app.vcxproj -> C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\x64\Debug\colossal_app.exe

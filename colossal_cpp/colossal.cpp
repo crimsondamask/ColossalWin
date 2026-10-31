@@ -1441,7 +1441,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 
 static void glfw_error_callback(int error, const char* description);
 
-static void UiShowFlowMeter(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Tag tag, bool isError);
+static void UiShowOverView(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Link* links, bool isError);
 
 struct CurlMemoryStruct
 {
@@ -1449,24 +1449,6 @@ struct CurlMemoryStruct
 	size_t size;
 };
 
-// static size_t WriteMemoryCallback(void *contents, size_t size, size_t
-// nmemb,
-//                                   void *userp) {
-//     size_t                   realsize = size * nmemb;
-//     struct CurlMemoryStruct *mem      = (struct CurlMemoryStruct *)userp;
-
-//     char *ptr = (char *)realloc(mem->memory, mem->size + realsize + 1);
-//     if ( ptr == NULL ) {
-//         return 0;
-//     }
-//     mem->memory = ptr;
-//     memcpy(&(mem->memory[mem->size]), contents, realsize);
-//     mem->size              += realsize;
-//     mem->memory[mem->size]  = 0;
-//     return realsize;
-// }
-
-//
 //int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 int main(int, char**)
 {
@@ -1662,11 +1644,11 @@ int main(int, char**)
 	ImFont* regular_font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 20.0);
 	// ImFont *regular_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 18.0);
 	// Font to use for the HMI display of tags.
-	ImFont* display_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 38.0);
+	ImFont* display_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 28.0);
 #else
 
 	ImFont* regular_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 16.0);
-	ImFont* display_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 32.0);
+	ImFont* display_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 28.0);
 #endif
 	// ==================================================
 	// float baseFontSize = 13.0f; // 13.0f is the size of the default font.
@@ -1904,7 +1886,7 @@ int main(int, char**)
 	int LogoimageWidth = 0;
 	int LogoimageHeight = 0;
 	GLuint LogoimageTexture = 0;
-	
+
 	// C++ implementation.
 	// Upgrade
 	if (!loadTextureDataFromFile(std::filesystem::path("telecontrol.png"), &LogoimageTexture, &LogoimageWidth, &LogoimageHeight))
@@ -1912,15 +1894,15 @@ int main(int, char**)
 		return EXIT_FAILURE;
 	}
 
-	int flowMeterImageWidth = 0;
-	int flowMeterImageHeight = 0;
-	GLuint flowMeterImageTexture = 0;
-	
-	if (!loadTextureDataFromFile(std::filesystem::path("./HmiData/flow_meter.png"), &flowMeterImageTexture, &flowMeterImageWidth, &flowMeterImageHeight))
+	int OverViewImageWidth = 0;
+	int OverViewImageHeight = 0;
+	GLuint OverViewImageTexture = 0;
+
+	if (!loadTextureDataFromFile(std::filesystem::path("./HmiData/overview.png"), &OverViewImageTexture, &OverViewImageWidth, &OverViewImageHeight))
 	{
 		return EXIT_FAILURE;
 	}
-	
+
 	// The main loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -1969,10 +1951,30 @@ int main(int, char**)
 					// This could be improved.
 					for (int j = 0; j < N_CHANNELS; j++)
 					{
+						if (plot_buffers[i][j].tag_data_size() > PLOT_BUFFER_SIZE)
+						{
+							plot_buffers[i][j].clear();
+						}
 						if (links[i].tags[j].enabled && links[i].timestamp > 0 && !links[i].is_error)
 						{
-							plot_buffers[i][j].push_value((double)links[i].tags[j].tag_value.real_value,
-								(double)cur_timestamp);
+							switch (links[i].tags[j].value_type)
+							{
+							case VALUE_REAL:
+								plot_buffers[i][j].push_value((double)links[i].tags[j].tag_value.real_value,
+									(double)cur_timestamp);
+								break;
+							case VALUE_INT:
+								plot_buffers[i][j].push_value((double)links[i].tags[j].tag_value.int_value,
+									(double)cur_timestamp);
+								break;
+							case VALUE_BOOL:
+								plot_buffers[i][j].push_value((double)links[i].tags[j].tag_value.bool_value,
+									(double)cur_timestamp);
+								break;
+							default:
+								plot_buffers[i][j].push_value((double)NAN, (double)cur_timestamp);
+								break;
+							}
 						}
 						else
 						{
@@ -2068,8 +2070,8 @@ int main(int, char**)
 		}
 		else
 		{
-			
-			UiShowFlowMeter(flowMeterImageWidth, flowMeterImageHeight, flowMeterImageTexture, display_font, links[0].tags[0], links[0].is_error);
+
+			UiShowOverView(OverViewImageWidth, OverViewImageHeight, OverViewImageTexture, display_font, links, links[0].is_error);
 		}
 
 		ImGui::Render();
@@ -2108,19 +2110,28 @@ int main(int, char**)
 	return EXIT_SUCCESS;
 }
 
-static void UiShowFlowMeter(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Tag tag, bool isError)
+static void UiShowOverView(int OverViewImageWidth, int OverViewImageHeight, GLuint OverViewImageTexture, ImFont* display_font, Link* links, bool isError)
 {
 	ImGui::Begin("HMI_Display");
 
+	ImVec2 f = ImGui::GetCursorScreenPos();
+	float OverViewImagex = f.x;
+	float OverViewImagey = f.y;
+
+	ImVec2 minPos = ImVec2(OverViewImagex, OverViewImagey);
+	ImVec2 maxPos = ImVec2(OverViewImagex + OverViewImageWidth, OverViewImagey + OverViewImageHeight);
+
+	ImGui::GetWindowDrawList()->AddImage((ImTextureID)(intptr_t)OverViewImageTexture, minPos, maxPos);
+	
 	ImVec2 p = ImGui::GetCursorScreenPos();
 
-	float tagx = p.x;
-	float tagy = p.y;
-	float tagWidth = 250.0f;
-	float tagHeight = 50.0f;
+	float tagx = p.x + 60.0;
+	float tagy = p.y + 500.0;
+	float tagWidth = 200.0f;
+	float tagHeight = 30.0f;
 	ImVec2 tagRectMin = ImVec2(tagx, tagy);
 	ImVec2 tagRectMax = ImVec2(tagx + tagWidth, tagy + tagHeight);
-	
+
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 	if (isError)
 	{
@@ -2132,28 +2143,20 @@ static void UiShowFlowMeter(int flowMeterImageWidth, int flowMeterImageHeight, G
 		drawList->AddRectFilled(tagRectMin, tagRectMax, IM_COL32(0, 0, 0, 255), 0.0f);
 		drawList->AddRect(tagRectMin, tagRectMax, IM_COL32(200, 200, 200, 255), 0.0f, 0, 5.0f);
 	}
-	
+
 	char tagValueStr[32];
-	sprintf(tagValueStr, "%.2f L/min", tag.tag_value.real_value);
-	
-	
+	sprintf(tagValueStr, "%.2f L/min", links[0].tags[0].tag_value.real_value);
+
+
 	ImGui::PushFont(display_font);
 	ImVec2 textSize = ImGui::CalcTextSize(tagValueStr);
 	ImGui::PopFont();
-	
+
 	ImVec2 textPos = ImVec2(tagx + (tagWidth - textSize.x) * 0.5f, tagy + (tagHeight - textSize.y) * 0.5f);
-	
+
 	drawList->AddText(display_font, display_font->FontSize, textPos, IM_COL32(255, 255, 255, 255), tagValueStr);
-	ImGui::Dummy(ImVec2(tagWidth, tagHeight + 20.0f)); // Reserve space for the tag display
-	
-	ImVec2 f = ImGui::GetCursorScreenPos();
-	float flowMeterImagex = f.x;
-	float flowMeterImagey = f.y;
+	//ImGui::Dummy(ImVec2(tagWidth, tagHeight + 20.0f)); // Reserve space for the tag display
 
-	ImVec2 minPos = ImVec2(flowMeterImagex, flowMeterImagey);
-	ImVec2 maxPos = ImVec2(flowMeterImagex + flowMeterImageWidth * 0.5, flowMeterImagey + flowMeterImageHeight * 0.5);
-
-	ImGui::GetWindowDrawList()->AddImage((ImTextureID)(intptr_t)flowMeterImageTexture, minPos, maxPos);
 
 	ImGui::End();
 }

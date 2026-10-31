@@ -1,5 +1,5 @@
 #pragma once
-#include "link.h"
+#include "../colossal_cpp/link.h"
 #include <filesystem>
 #include <string>
 #include <vector>

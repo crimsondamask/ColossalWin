@@ -23,11 +23,11 @@
 #define URL_BUF_LEN 256
 #define TOKEN_BUF_LEN 256
 
-#define N_CHANNELS 20
-#define N_DEVICES 2
+#define N_CHANNELS 50
+#define N_DEVICES 3
 #define N_TAG_DISPLAYS 5
 #define TAG_DISPLAY_PERIOD 300
-#define PLOT_BUFFER_SIZE 300
+#define PLOT_BUFFER_SIZE 21600
 #define N_FRAMES_UNTIL_CONS 60
 #define EIP_TAG_TEMPLATE "protocol=ab_eip&gateway=%s&path=1,0&cpu=LGX&elem_count=1&name=%s"
 #define MAX_MB_REGISTERS 123
