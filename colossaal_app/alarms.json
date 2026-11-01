@@ -11,13 +11,13 @@
   },
   {
     "id": 1,
-    "name": "High temperature",
-    "description": "Temperature exceeds the normal range",
+    "name": "Low temperature",
+    "description": "Temperature is less than the normal range",
     "valueType": 1,
     "linkId": 0,
     "tagId": 1,
-    "thresholdValue": 80.0,
-    "alarmType": 2
+    "thresholdValue": 20.0,
+    "alarmType": 1
   },
   {
     "id": 2,

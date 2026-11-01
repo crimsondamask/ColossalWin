@@ -3,7 +3,8 @@
 
 ClAlarm::ClAlarm(int id, const std::string& name, const std::string& description,
 	int valueType, int linkId, int tagId, const TagValue& thresholdValue, ClAlarmType alarmType)
-	: id(id), name(name), description(description), valueType(valueType), linkId(linkId), tagId(tagId), thresholdValue(thresholdValue), alarmType(alarmType), active(false), acknowledged(false), enabled(true), logged(false) {
+	: id(id), name(name), description(description), valueType(valueType), linkId(linkId), tagId(tagId), thresholdValue(thresholdValue), alarmType(alarmType),
+	active(false), acknowledged(false), enabled(true), logged(false), activeTimestamp(0), acknowledgedTimestamp(0), alarmOn(false) {
 
 }
 
@@ -21,6 +22,7 @@ void ClAlarm::processAlarm(const TagValue& currentValue, bool isLinkError) {
 		switch (valueType) {
 		case VALUE_REAL:
 			active = (currentValue.real_value == thresholdValue.real_value);
+
 			break;
 		case VALUE_INT:
 			active = (currentValue.int_value == thresholdValue.int_value);
@@ -103,7 +105,21 @@ void ClAlarm::processAlarm(const TagValue& currentValue, bool isLinkError) {
 		}
 		break;
 	}
-	
+
+	if (active && !alarmOn) {
+		activeTimestamp = static_cast<int>(time(nullptr));
+		alarmOn = true;
+		acknowledged = false;
+	}
+
+	if (alarmOn && acknowledged)
+	{
+		acknowledgedTimestamp = static_cast<int>(time(nullptr));
+	}
+
+	if (!active && alarmOn && acknowledged) {
+		alarmOn = false;
+	}
 	std::cout << "Alarm ID: " << id << ", Name: " << name << ", Active: " << (active ? "Yes" : "No") << std::endl;
 
 }
@@ -146,7 +162,8 @@ bool ClAlarms::loadJsonAlarms(const std::string& filePath) {
 	nlohmann::json jsonAlarms;
 	try {
 		file >> jsonAlarms;
-	} catch (const nlohmann::json::parse_error& e) {
+	}
+	catch (const nlohmann::json::parse_error& e) {
 		std::cerr << "Failed to parse JSON: " << e.what() << std::endl;
 		return false;
 	}
@@ -159,7 +176,7 @@ bool ClAlarms::loadJsonAlarms(const std::string& filePath) {
 		int linkId = jsonAlarm.value("linkId", -1);
 		int tagId = jsonAlarm.value("tagId", -1);
 		TagValue thresholdValue;
-		
+
 		switch (valueType) {
 		case VALUE_REAL:
 			thresholdValue.real_value = jsonAlarm.value("thresholdValue", 0.0);
@@ -171,7 +188,7 @@ bool ClAlarms::loadJsonAlarms(const std::string& filePath) {
 			thresholdValue.bool_value = jsonAlarm.value("thresholdValue", false);
 			break;
 		}
-		
+
 		ClAlarmType alarmType = static_cast<ClAlarmType>(jsonAlarm.value("alarmType", 0));
 
 		ClAlarm alarm(id, name, description, valueType, linkId, tagId, thresholdValue, alarmType);
@@ -179,4 +196,22 @@ bool ClAlarms::loadJsonAlarms(const std::string& filePath) {
 	}
 
 	return true;
+}
+
+int ClAlarms::activeAlarmsCount() const {
+	return std::count_if(alarms.begin(), alarms.end(), [](const ClAlarm& alarm) {
+		return alarm.isActive();
+		});
+}
+
+int ClAlarms::acknowledgedAlarmsCount() const {
+	return std::count_if(alarms.begin(), alarms.end(), [](const ClAlarm& alarm) {
+		return alarm.isAcknowledged();
+		});
+}
+
+void ClAlarms::acknowledgeAll() {
+	for (auto& alarm : alarms) {
+		alarm.acknowledge();
+	}
 }

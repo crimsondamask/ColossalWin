@@ -28,6 +28,8 @@ public:
 	int valueType;
 	int linkId;
 	int tagId;
+	int activeTimestamp;
+	int acknowledgedTimestamp;
 	TagValue thresholdValue;
 	ClAlarmType alarmType;
 
@@ -37,10 +39,12 @@ public:
 	void processAlarm(const TagValue& currentValue, bool isLinkError);
 	bool isActive() const { return active; }
 	bool isAcknowledged() const { return acknowledged; }
+	bool isOn() const { return alarmOn; }
 	bool acknowledge();
 
 private:
 	bool active;
+	bool alarmOn;
 	bool acknowledged;
 };
 class ClAlarms
@@ -55,5 +59,9 @@ public:
 	void removeAlarm(int id);
 	void processAlarms();
 	bool loadJsonAlarms(const std::string& filePath);
+	int activeAlarmsCount() const;
+	int acknowledgedAlarmsCount() const;
+	void acknowledgeAll();
+	int count() const { return static_cast<int>(alarms.size()); }
 };
 

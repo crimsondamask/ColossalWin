@@ -46,6 +46,7 @@ typedef struct UiMenuState
     bool tag_displays;
     bool tag_export;
     bool evals_menu;
+    bool alarms_menu;
     bool about;
 } UiMenuState;
 

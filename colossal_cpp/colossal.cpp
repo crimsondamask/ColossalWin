@@ -66,6 +66,7 @@ static int polling_thread(void* arg);
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <chrono>
 #include <vector>
 #include "../colossaal_app/ClAlarms.h"
 
@@ -82,6 +83,17 @@ static bool copyText(char(&destination)[N], std::string_view value)
 	std::memcpy(destination, value.data(), value.size());
 	destination[value.size()] = '\0';
 	return true;
+}
+
+//
+std::string getDateTimeFromTimestamp(int timestamp)
+{
+	// Convert to a system clock time point
+	std::chrono::sys_seconds tp{ std::chrono::seconds{timestamp} };
+
+	// Format into a human-readable string (UTC)
+	std::string dateTime = std::format("{:%Y-%m-%d %H:%M:%S}", tp);
+	return dateTime;
 }
 
 // Parses the links from a JSON file and populates the provided array of Link structures.
@@ -827,6 +839,156 @@ static void ui_plot_window(size_t link_count, Link links[], int selected_link, i
 	ImGui::End();
 }
 
+static void uiAlarmsWindow(ClAlarms& alarms, int* selectedAlarmIndex, bool* menu_state)
+{
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 0, 0, 255));
+	char alarms_window_title[32];
+	snprintf(alarms_window_title, sizeof(alarms_window_title), "Alarms");
+	if (ImGui::Begin(alarms_window_title, menu_state))
+	{
+		ImGui::PopStyleColor();
+		ImGui::Text("Active Alarms: %d", alarms.activeAlarmsCount());
+		ImGui::Text("Acknowledged Alarms: %d", alarms.acknowledgedAlarmsCount());
+		ImGui::Text("Total Alarms: %d", alarms.alarms.size());
+
+		if (ImGui::Button("Acknowledge All"))
+		{
+			alarms.acknowledgeAll();
+		}
+		ImGui::Separator();
+
+		ImVec2 outer_size = ImVec2(0.0f, 400.0f);
+		ImGui::BeginTable("AlarmsTable", 7,
+			ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY |
+			ImGuiTableFlags_ScrollX | ImGuiTableFlags_RowBg,
+			outer_size);
+
+		ImGui::TableSetupColumn("NAME");
+		ImGui::TableSetupColumn("DESCIPTION");
+		ImGui::TableSetupColumn("ALARM VALUE");
+		ImGui::TableSetupColumn("CURRENT VALUE");
+		ImGui::TableSetupColumn("ALARM TYPE");
+		ImGui::TableSetupColumn("TIMESTAMP");
+		ImGui::TableSetupColumn("ACK TIMESTAMP");
+		ImGui::TableSetupScrollFreeze(0, 1);
+		ImGui::TableHeadersRow();
+
+		for (int i = 0; i < alarms.count(); ++i)
+		{
+			const ClAlarm& alarm = alarms.alarms[i];
+
+			if (alarm.isOn())
+			{
+				ImGui::PushID(i);
+				char selectable_label[32];
+				bool set_selected = false;
+
+				snprintf(selectable_label, sizeof(selectable_label), "%s", alarm.name.c_str());
+				ImGui::TableNextRow();
+				
+				if (alarm.isAcknowledged())
+				{
+					ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(0, 255, 0, 255));
+				}
+				else
+				{
+					ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(255, 0, 0, 255));
+				}
+				
+				ImGui::TableNextColumn();
+
+				if (*selectedAlarmIndex == i)
+				{
+					set_selected = true;
+				}
+				else
+				{
+					set_selected = false;
+				}
+				if (ImGui::Selectable(selectable_label, set_selected, ImGuiSelectableFlags_SpanAllColumns))
+				{
+					*selectedAlarmIndex = i;
+				}
+
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", alarm.description.c_str());
+				ImGui::TableNextColumn();
+				switch (alarm.valueType)
+				{
+				case VALUE_REAL:
+					ImGui::Text("%0.3f", alarm.thresholdValue.real_value);
+					break;
+				case VALUE_INT:
+					ImGui::Text("%d", alarm.thresholdValue.int_value);
+					break;
+				case VALUE_BOOL:
+					ImGui::Text("%d", alarm.thresholdValue.bool_value);
+					break;
+				default:
+					ImGui::Text("NO VALID VALUE TYPE");
+					break;
+				}
+				ImGui::TableNextColumn();
+				switch (alarm.valueType)
+				{
+				case VALUE_REAL:
+					ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.real_value);
+					break;
+				case VALUE_INT:
+					ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.int_value);
+					break;
+				case VALUE_BOOL:
+					ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.bool_value);
+					break;
+				default:
+					ImGui::Text("NO VALID VALUE TYPE");
+					break;
+				}
+				ImGui::TableNextColumn();
+				switch (alarm.alarmType)
+				{
+				case ClAlarmType::Equal:
+					ImGui::Text("EQUAL");
+					break;
+				case ClAlarmType::High:
+					ImGui::Text("HIGH");
+					break;
+				case ClAlarmType::HighHigh:
+					ImGui::Text("HIGH HIGH");
+					break;
+				case ClAlarmType::LowLow:
+					ImGui::Text("LOW LOW");
+					break;
+				case ClAlarmType::Low:
+					ImGui::Text("LOW");
+					break;
+				default:
+					ImGui::Text("NO VALID ALARM TYPE");
+					break;
+
+				}
+				ImGui::TableNextColumn();
+				ImGui::Text("%s", getDateTimeFromTimestamp(alarm.activeTimestamp).c_str());
+				ImGui::TableNextColumn();
+				if (alarm.isAcknowledged())
+				{
+					ImGui::Text("%s", getDateTimeFromTimestamp(alarm.acknowledgedTimestamp).c_str());
+				}
+				else
+				{
+					ImGui::Text("Not Acknowledged");
+				}
+				ImGui::PopID();
+			}
+		}
+		ImGui::EndTable();
+	}
+	else
+	{
+		ImGui::PopStyleColor();
+	}
+	ImGui::End();
+}
 static void ui_evals_window(size_t link_count, Link links[], size_t eval_count, ClEval evals[],
 	ClEval ui_eval_buffers[], bool* menu_state, int* selected_eval_index,
 	bool* eval_config_change)
@@ -1442,7 +1604,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 
 static void glfw_error_callback(int error, const char* description);
 
-static void UiShowOverView(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Link* links, bool isError);
+static void uiShowOverView(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Link* links, bool isError);
 
 struct CurlMemoryStruct
 {
@@ -1695,9 +1857,9 @@ int main(int, char**)
 	// Evaluations array
 	ClEval evals[N_EVALS];
 	ClEval ui_eval_buffer[N_EVALS];
-	
+
 	ClAlarms alarms(links);
-	
+
 	// Data type to hold the result of a fetch query from the DB.
 	unsigned long last_buf_get = 0;
 
@@ -1710,6 +1872,7 @@ int main(int, char**)
 	int selected_link_index = 0;
 	int selected_tag_index = 0;
 	int selected_eval_index = 0;
+	int selectedAlarmIndex = 0;
 
 	// Initialize the links for the config with default values.
 	for (int i = 0; i < N_DEVICES; i++)
@@ -1906,7 +2069,7 @@ int main(int, char**)
 	{
 		return EXIT_FAILURE;
 	}
-	
+
 	// Load alarms configuration from JSON file.
 	if (!alarms.loadJsonAlarms("./alarms.json"))
 	{
@@ -1999,7 +2162,7 @@ int main(int, char**)
 				cl_evaluate(&evals[i], evals, links);
 			}
 			last_buf_get = cur_timestamp;
-			
+
 			alarms.processAlarms();
 		}
 
@@ -2036,6 +2199,7 @@ int main(int, char**)
 			if (ImGui::BeginMenu("View"))
 			{
 				ImGui::MenuItem("Show HMI", NULL, &menu_state.show_hmi);
+				ImGui::MenuItem("Show Alarms", NULL, &menu_state.alarms_menu);
 				ImGui::EndMenu();
 			}
 			if (ImGui::BeginMenu("Help"))
@@ -2084,8 +2248,13 @@ int main(int, char**)
 		else
 		{
 
-			UiShowOverView(OverViewImageWidth, OverViewImageHeight, OverViewImageTexture, display_font, links, links[0].is_error);
+			uiShowOverView(OverViewImageWidth, OverViewImageHeight, OverViewImageTexture, display_font, links, links[0].is_error);
 		}
+
+
+		uiAlarmsWindow(alarms, &selectedAlarmIndex, &menu_state.alarms_menu);
+
+
 
 		ImGui::Render();
 
@@ -2123,7 +2292,7 @@ int main(int, char**)
 	return EXIT_SUCCESS;
 }
 
-static void UiShowOverView(int OverViewImageWidth, int OverViewImageHeight, GLuint OverViewImageTexture, ImFont* display_font, Link* links, bool isError)
+static void uiShowOverView(int OverViewImageWidth, int OverViewImageHeight, GLuint OverViewImageTexture, ImFont* display_font, Link* links, bool isError)
 {
 	ImGui::Begin("HMI_Display");
 
@@ -2135,7 +2304,7 @@ static void UiShowOverView(int OverViewImageWidth, int OverViewImageHeight, GLui
 	ImVec2 maxPos = ImVec2(OverViewImagex + OverViewImageWidth, OverViewImagey + OverViewImageHeight);
 
 	ImGui::GetWindowDrawList()->AddImage((ImTextureID)(intptr_t)OverViewImageTexture, minPos, maxPos);
-	
+
 	ImVec2 p = ImGui::GetCursorScreenPos();
 
 	float tagx = p.x + 60.0;
