@@ -147,7 +147,7 @@ static bool parseLinksFromJson(
 			link.active = false;
 			link.is_error = true;
 			link.need_to_reconnect = true;
-			link.polling_type = LinkPollingType::SINGLE;
+			//link.polling_type = LinkPollingType::Single;
 			link.poll_delay = 1000;
 			if (!copyText(link.err_msg, "The link is disconnected."))
 			{
@@ -858,130 +858,133 @@ static void uiAlarmsWindow(ClAlarms& alarms, int* selectedAlarmIndex, bool* menu
 		ImGui::Separator();
 
 		ImVec2 outer_size = ImVec2(0.0f, 400.0f);
-		ImGui::BeginTable("AlarmsTable", 7,
+		if (ImGui::BeginTable("AlarmsTable", 7,
 			ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY |
 			ImGuiTableFlags_ScrollX | ImGuiTableFlags_RowBg,
-			outer_size);
-
-		ImGui::TableSetupColumn("NAME");
-		ImGui::TableSetupColumn("DESCIPTION");
-		ImGui::TableSetupColumn("ALARM VALUE");
-		ImGui::TableSetupColumn("CURRENT VALUE");
-		ImGui::TableSetupColumn("ALARM TYPE");
-		ImGui::TableSetupColumn("TIMESTAMP");
-		ImGui::TableSetupColumn("ACK TIMESTAMP");
-		ImGui::TableSetupScrollFreeze(0, 1);
-		ImGui::TableHeadersRow();
-
-		for (int i = 0; i < alarms.count(); ++i)
+			outer_size))
 		{
-			const ClAlarm& alarm = alarms.alarms[i];
 
-			if (alarm.isOn())
+
+			ImGui::TableSetupColumn("NAME");
+			ImGui::TableSetupColumn("DESCIPTION");
+			ImGui::TableSetupColumn("ALARM VALUE");
+			ImGui::TableSetupColumn("CURRENT VALUE");
+			ImGui::TableSetupColumn("ALARM TYPE");
+			ImGui::TableSetupColumn("TIMESTAMP");
+			ImGui::TableSetupColumn("ACK TIMESTAMP");
+			ImGui::TableSetupScrollFreeze(0, 1);
+			ImGui::TableHeadersRow();
+
+			for (int i = 0; i < alarms.count(); ++i)
 			{
-				ImGui::PushID(i);
-				char selectable_label[32];
-				bool set_selected = false;
+				const ClAlarm& alarm = alarms.alarms[i];
 
-				snprintf(selectable_label, sizeof(selectable_label), "%s", alarm.name.c_str());
-				ImGui::TableNextRow();
-				
-				if (alarm.isAcknowledged())
+				if (alarm.isOn())
 				{
-					ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(0, 255, 0, 255));
-				}
-				else
-				{
-					ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(255, 0, 0, 255));
-				}
-				
-				ImGui::TableNextColumn();
+					ImGui::PushID(i);
+					char selectable_label[32];
+					bool set_selected = false;
 
-				if (*selectedAlarmIndex == i)
-				{
-					set_selected = true;
-				}
-				else
-				{
-					set_selected = false;
-				}
-				if (ImGui::Selectable(selectable_label, set_selected, ImGuiSelectableFlags_SpanAllColumns))
-				{
-					*selectedAlarmIndex = i;
-				}
+					snprintf(selectable_label, sizeof(selectable_label), "%s", alarm.name.c_str());
+					ImGui::TableNextRow();
 
-				ImGui::TableNextColumn();
-				ImGui::Text("%s", alarm.description.c_str());
-				ImGui::TableNextColumn();
-				switch (alarm.valueType)
-				{
-				case VALUE_REAL:
-					ImGui::Text("%0.3f", alarm.thresholdValue.real_value);
-					break;
-				case VALUE_INT:
-					ImGui::Text("%d", alarm.thresholdValue.int_value);
-					break;
-				case VALUE_BOOL:
-					ImGui::Text("%d", alarm.thresholdValue.bool_value);
-					break;
-				default:
-					ImGui::Text("NO VALID VALUE TYPE");
-					break;
-				}
-				ImGui::TableNextColumn();
-				switch (alarm.valueType)
-				{
-				case VALUE_REAL:
-					ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.real_value);
-					break;
-				case VALUE_INT:
-					ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.int_value);
-					break;
-				case VALUE_BOOL:
-					ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.bool_value);
-					break;
-				default:
-					ImGui::Text("NO VALID VALUE TYPE");
-					break;
-				}
-				ImGui::TableNextColumn();
-				switch (alarm.alarmType)
-				{
-				case ClAlarmType::Equal:
-					ImGui::Text("EQUAL");
-					break;
-				case ClAlarmType::High:
-					ImGui::Text("HIGH");
-					break;
-				case ClAlarmType::HighHigh:
-					ImGui::Text("HIGH HIGH");
-					break;
-				case ClAlarmType::LowLow:
-					ImGui::Text("LOW LOW");
-					break;
-				case ClAlarmType::Low:
-					ImGui::Text("LOW");
-					break;
-				default:
-					ImGui::Text("NO VALID ALARM TYPE");
-					break;
+					if (alarm.isAcknowledged())
+					{
+						ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(0, 255, 0, 255));
+					}
+					else
+					{
+						ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(255, 0, 0, 255));
+					}
 
+					ImGui::TableNextColumn();
+
+					if (*selectedAlarmIndex == i)
+					{
+						set_selected = true;
+					}
+					else
+					{
+						set_selected = false;
+					}
+					if (ImGui::Selectable(selectable_label, set_selected, ImGuiSelectableFlags_SpanAllColumns))
+					{
+						*selectedAlarmIndex = i;
+					}
+
+					ImGui::TableNextColumn();
+					ImGui::Text("%s", alarm.description.c_str());
+					ImGui::TableNextColumn();
+					switch (alarm.valueType)
+					{
+					case VALUE_REAL:
+						ImGui::Text("%0.3f", alarm.thresholdValue.real_value);
+						break;
+					case VALUE_INT:
+						ImGui::Text("%d", alarm.thresholdValue.int_value);
+						break;
+					case VALUE_BOOL:
+						ImGui::Text("%d", alarm.thresholdValue.bool_value);
+						break;
+					default:
+						ImGui::Text("NO VALID VALUE TYPE");
+						break;
+					}
+					ImGui::TableNextColumn();
+					switch (alarm.valueType)
+					{
+					case VALUE_REAL:
+						ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.real_value);
+						break;
+					case VALUE_INT:
+						ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.int_value);
+						break;
+					case VALUE_BOOL:
+						ImGui::Text("%0.3f", alarms.links[alarm.linkId].tags[alarm.tagId].tag_value.bool_value);
+						break;
+					default:
+						ImGui::Text("NO VALID VALUE TYPE");
+						break;
+					}
+					ImGui::TableNextColumn();
+					switch (alarm.alarmType)
+					{
+					case ClAlarmType::Equal:
+						ImGui::Text("EQUAL");
+						break;
+					case ClAlarmType::High:
+						ImGui::Text("HIGH");
+						break;
+					case ClAlarmType::HighHigh:
+						ImGui::Text("HIGH HIGH");
+						break;
+					case ClAlarmType::LowLow:
+						ImGui::Text("LOW LOW");
+						break;
+					case ClAlarmType::Low:
+						ImGui::Text("LOW");
+						break;
+					default:
+						ImGui::Text("NO VALID ALARM TYPE");
+						break;
+
+					}
+					ImGui::TableNextColumn();
+					ImGui::Text("%s", getDateTimeFromTimestamp(alarm.activeTimestamp).c_str());
+					ImGui::TableNextColumn();
+					if (alarm.isAcknowledged())
+					{
+						ImGui::Text("%s", getDateTimeFromTimestamp(alarm.acknowledgedTimestamp).c_str());
+					}
+					else
+					{
+						ImGui::Text("Not Acknowledged");
+					}
+					ImGui::PopID();
 				}
-				ImGui::TableNextColumn();
-				ImGui::Text("%s", getDateTimeFromTimestamp(alarm.activeTimestamp).c_str());
-				ImGui::TableNextColumn();
-				if (alarm.isAcknowledged())
-				{
-					ImGui::Text("%s", getDateTimeFromTimestamp(alarm.acknowledgedTimestamp).c_str());
-				}
-				else
-				{
-					ImGui::Text("Not Acknowledged");
-				}
-				ImGui::PopID();
 			}
+			ImGui::EndTable();
 		}
-		ImGui::EndTable();
 	}
 	else
 	{
@@ -1804,7 +1807,7 @@ int main(int, char**)
 
 	// Load font.
 #if defined(_WIN32)
-	ImFont* regular_font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 20.0);
+	ImFont* regular_font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0);
 	// ImFont *regular_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 18.0);
 	// Font to use for the HMI display of tags.
 	ImFont* display_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 28.0);
@@ -2252,7 +2255,10 @@ int main(int, char**)
 		}
 
 
-		uiAlarmsWindow(alarms, &selectedAlarmIndex, &menu_state.alarms_menu);
+		if (menu_state.alarms_menu)
+		{
+			uiAlarmsWindow(alarms, &selectedAlarmIndex, &menu_state.alarms_menu);
+		}
 
 
 
@@ -2295,6 +2301,7 @@ int main(int, char**)
 static void uiShowOverView(int OverViewImageWidth, int OverViewImageHeight, GLuint OverViewImageTexture, ImFont* display_font, Link* links, bool isError)
 {
 	ImGui::Begin("HMI_Display");
+
 
 	ImVec2 f = ImGui::GetCursorScreenPos();
 	float OverViewImagex = f.x;
@@ -2339,6 +2346,17 @@ static void uiShowOverView(int OverViewImageWidth, int OverViewImageHeight, GLui
 	drawList->AddText(display_font, display_font->FontSize, textPos, IM_COL32(255, 255, 255, 255), tagValueStr);
 	//ImGui::Dummy(ImVec2(tagWidth, tagHeight + 20.0f)); // Reserve space for the tag display
 
+	float buttonx = p.x + 60.0;
+	float buttony = p.y + 550.0;
+
+	ImGui::SetCursorScreenPos(ImVec2(buttonx, buttony));
+
+	if (ImGui::Button("Start Pump", ImVec2(200.0f, 30.0f)))
+	{
+		// Set the write flag for the tag to true
+		//links[0].tags[1].write_flag = true;
+		//links[0].tags[1].tag_value.bool_value = true; // Set the value to true to start the pump
+	}
 
 	ImGui::End();
 }
@@ -2455,48 +2473,92 @@ int polling_thread(void* arg)
 			QueryPerformanceCounter(&start);
 
 			link.is_error = false;
-			for (int i = 0; i < link.tag_count; i++)
-			{
 
-				if (!link.tags[i].enabled)
+			if (link.polling_type == LinkPollingType::Block)
+			{
+				// The tag writing should be done per-tag basis. So, we will loop through the tags and write them one by one.
+				for (int i = 0; i < link.tag_count; i++)
 				{
-					// Skip the channel if disabled
-					continue;
+					if (!link.tags[i].enabled)
+					{
+						// Skip the channel if disabled
+						continue;
+					}
+					if (link.tags[i].write_flag)
+					{
+						if (cl_write_tag(&link, i) == -1)
+						{
+							link.is_error = true;
+							if (buf_put(buf_ptr, link))
+							{
+								// printf("Producer N. %d produced data. timestamp:
+								// %lu\n", id, timestamp);
+							}
+						}
+						else
+						{
+							link.tags[i].write_flag = false;
+							link.tags[i].is_error = false;
+							link.is_error = false;
+						}
+					}
+				}
+				// Read all the tags in a single request.
+				if (clPollLink(link) == -1)
+				{
+					link.is_error = true;
+					reconnect_flag = true;
+				}
+				else
+				{
+					// 
 				}
 
-				if (link.tags[i].write_flag)
+			}
+			else
+			{
+				for (int i = 0; i < link.tag_count; i++)
 				{
-					if (cl_write_tag(&link, i) == -1)
+					if (!link.tags[i].enabled)
+					{
+						// Skip the channel if disabled
+						continue;
+					}
+
+					if (link.tags[i].write_flag)
+					{
+						if (cl_write_tag(&link, i) == -1)
+						{
+							link.is_error = true;
+							if (buf_put(buf_ptr, link))
+							{
+								// printf("Producer N. %d produced data. timestamp:
+								// %lu\n", id, timestamp);
+							}
+						}
+						else
+						{
+							link.tags[i].write_flag = false;
+							link.tags[i].is_error = false;
+							link.is_error = false;
+						}
+					}
+					// Read the tag.
+					if (cl_read_tag(&link, i) == -1)
 					{
 						link.is_error = true;
+						reconnect_flag = true;
+						// indicate that an error happened.
+						// note that each tag holds its own error flag. So, this
+						// is redundant.
 						if (buf_put(buf_ptr, link))
 						{
 							// printf("Producer N. %d produced data. timestamp:
 							// %lu\n", id, timestamp);
 						}
-					}
-					else
-					{
-						link.tags[i].write_flag = false;
-						link.tags[i].is_error = false;
-						link.is_error = false;
-					}
-				}
-				// Read the tag.
-				if (cl_read_tag(&link, i) == -1)
-				{
-					link.is_error = true;
-					reconnect_flag = true;
-					// indicate that an error happened.
-					// note that each tag holds its own error flag. So, this
-					// is redundant.
-					if (buf_put(buf_ptr, link))
-					{
-						// printf("Producer N. %d produced data. timestamp:
-						// %lu\n", id, timestamp);
-					}
 
-					// break;
+						// break;
+					}
 				}
 			}
 

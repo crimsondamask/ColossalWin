@@ -1,11 +1,13 @@
-﻿  ClAlarms.cpp
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\ClAlarms.cpp(182,47): warning C4244: '=': conversion from 'ReturnType' to 'float', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\ClAlarms.cpp(182,47): warning C4244:         with
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\ClAlarms.cpp(182,47): warning C4244:         [
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\ClAlarms.cpp(182,47): warning C4244:             ReturnType=double
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\ClAlarms.cpp(182,47): warning C4244:         ]
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\ClAlarms.cpp(202,22): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\ClAlarms.cpp(208,22): warning C4244: 'return': conversion from '__int64' to 'int', possible loss of data
+﻿  link.cpp
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(146,34): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(154,39): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(158,39): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(162,39): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(168,39): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(173,39): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(344,15): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(867,6): warning C4102: 'defaut': unreferenced label
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\link.cpp(179,1): warning C4172: returning address of local variable or temporary : link_init
   colossaal_app.vcxproj -> C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\x64\Debug\colossal_app.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

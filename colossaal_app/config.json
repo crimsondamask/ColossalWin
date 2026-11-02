@@ -62,6 +62,63 @@
         },
         "unit": "C",
         "value_type": 1
+      },
+      {
+        "description": "P3",
+        "enabled": true,
+        "logged": true,
+        "name": "P3",
+        "tag_address": {
+          "mb_address": 6,
+          "ab_address": {
+            "tag": "P3"
+          },
+          "s7_address": {
+            "db": 1,
+            "start": 0,
+            "start_bit": 0
+          }
+        },
+        "unit": "Barg",
+        "value_type": 1
+      },
+      {
+        "description": "P4",
+        "enabled": true,
+        "logged": true,
+        "name": "P4",
+        "tag_address": {
+          "mb_address": 8,
+          "ab_address": {
+            "tag": "P4"
+          },
+          "s7_address": {
+            "db": 1,
+            "start": 0,
+            "start_bit": 0
+          }
+        },
+        "unit": "Barg",
+        "value_type": 1
+      },
+      {
+        "description": "P5",
+        "enabled": true,
+        "logged": true,
+        "name": "P5",
+        "tag_address": {
+          "mb_address": 10,
+          "ab_address": {
+            "tag": "P5"
+          },
+          "s7_address": {
+            "db": 1,
+            "start": 0,
+            "start_bit": 0
+          }
+        },
+        "unit": "Barg",
+        "value_type": 1
       }
     ]
   },

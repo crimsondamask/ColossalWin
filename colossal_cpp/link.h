@@ -31,6 +31,7 @@
 #define N_FRAMES_UNTIL_CONS 60
 #define EIP_TAG_TEMPLATE "protocol=ab_eip&gateway=%s&path=1,0&cpu=LGX&elem_count=1&name=%s"
 #define MAX_MB_REGISTERS 123
+#define MAX_MB_REGISTERS_BLOCK 1000
 
 #define CL_SERIAL_PARITY_NONE 'N'
 #define CL_SERIAL_PARITY_EVEN 'E'
@@ -41,8 +42,8 @@
 
 enum class LinkPollingType
 {
-    SINGLE,
-    BLOCK
+    Single = 0,
+    Block = 1
 };
 
 typedef enum LinkProtocol
@@ -247,7 +248,7 @@ typedef struct Link
     double elapsed_time;
     LinkPollingType polling_type;
     int polling_block_size;
-    uint16_t mb_registers_block[MAX_MB_REGISTERS];
+    uint16_t mb_registers_block[MAX_MB_REGISTERS_BLOCK];
 } Link;
 
 Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkConfig config, size_t tag_count,
@@ -255,6 +256,9 @@ Link *cl_new_link(char const *name, char const *tk, int id, int protocol, LinkCo
 int cl_connect_link(Link *link);
 int cl_diconnect_link(Link *link);
 void cl_destroy_link(Link *link);
+
+// Read all tags in a link. This function is used for block reading of tags.
+int clPollLink(Link& link);
 int cl_new_tag(Link *link, char const *name, char const *tk, int id, TagAddress tag_addr, int value_type, int protocol,
                bool enabled);
 int cl_read_tag(Link *link, int tag_id);
