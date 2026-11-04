@@ -235,6 +235,7 @@ static bool parseLinksFromJson(
 
 				const json& address = tagJson.at("tag_address");
 				tag.tag_addr.mb_addr.reg = address.at("mb_address").get<int>();
+				tag.tag_addr.mb_addr.bitOffset = address.at("bit").get<int>();
 
 				const json& eipAddress = address.at("ab_address");
 				const std::string eipTag = eipAddress.at("tag").get<std::string>();
@@ -646,7 +647,7 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
 			{
 				config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
 			}
-			const char* value_types[] = { "INT", "REAL - Uses 2 registers", "COIL" };
+			const char* value_types[] = { "INT", "REAL - Uses 2 registers", "BIT" };
 			if (ImGui::Combo("Value Type", &ui_buffer->tags[*selected_tag_index].value_type, value_types,
 				IM_ARRAYSIZE(value_types)))
 			{
@@ -659,6 +660,15 @@ static void ui_tag_window(size_t link_count, Link links[], Link ui_link_buffers[
 			if (ImGui::InputInt("Address", &ui_buffer->tags[*selected_tag_index].tag_addr.mb_addr.reg))
 			{
 				config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
+			}
+			
+			if (ui_buffer->tags[*selected_tag_index].value_type == CL_VALUE_BOOL)
+			{
+				if (ImGui::InputInt("Bit Offset", &ui_buffer->tags[*selected_tag_index].tag_addr.mb_addr.bitOffset))
+				{
+					config_edit_flags[selected_link_index] |= CONFIG_EDIT_CHANNEL_CONFIG;
+				}
+			
 			}
 			break;
 		}
@@ -1545,7 +1555,7 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 							ImGui::Text("%d", link->tags[j].tag_value.int_value);
 							break;
 						case VALUE_BOOL:
-							ImGui::Text("%d", link->tags[j].tag_value.bool_value);
+							ImGui::Text("%s", link->tags[j].tag_value.bool_value ? "TRUE" : "FALSE");
 							break;
 						}
 					}
@@ -2512,6 +2522,7 @@ int polling_thread(void* arg)
 				else
 				{
 					// 
+					link.is_error = false;
 				}
 
 			}

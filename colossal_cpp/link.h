@@ -154,6 +154,7 @@ typedef struct ModbusTagAddress
 {
     int mb_function;
     int reg;
+    int bitOffset;
     int slave;
 } ModbusTagAddress;
 

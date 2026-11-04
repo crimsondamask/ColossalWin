@@ -1,5 +1,6 @@
 // #pragma once
 #include "libmodbus/modbus.h"
+#include <bitset>
 #include "libplctag/libplctag.h"
 #include "link.h"
 #include "snap7/snap7.h"
@@ -13,6 +14,11 @@
 #include <errno.h>
 #endif
 #include <iostream>
+
+inline void setBit(uint16_t& v, int n) { v |= (1 << n); }
+inline void clearBit(uint16_t& v, int n) { v &= ~(1 << n); }
+inline void toggleBit(uint16_t& v, int n) { v ^= (1 << n); }
+inline bool testBit(uint16_t v, int n) { return (v >> n) & 1; }
 
 static uint32_t get_udint_s7(byte buffer[], int pos)
 {
@@ -112,7 +118,7 @@ Link* cl_new_link(char const* name, char const* tk, int id, int protocol, LinkCo
 	link->tag_count = tag_count;
 	link->is_error = true;
 	link->polling_type = LinkPollingType::Block;
-	link->polling_block_size = 20;
+	link->polling_block_size = 25;
 	memset(link->mb_registers_block, 0, sizeof(link->mb_registers_block));
 	link->poll_delay = 1000;
 	strcpy(link->err_msg, "The link is disconnected.");
@@ -136,6 +142,7 @@ Link* cl_new_link(char const* name, char const* tk, int id, int protocol, LinkCo
 		tag_addr.mb_addr.mb_function = MB_HOLDING;
 		tag_addr.mb_addr.slave = 1;
 		tag_addr.mb_addr.reg = (int)i * 2;
+		tag_addr.mb_addr.bitOffset = 0;
 		sprintf(tag_addr.eip_tag_addr.tag_name, "Tag%zu", i);
 		sprintf(tag_addr.eip_tag_addr.eip_path, EIP_TAG_TEMPLATE, link->link_config.eip_config.ip,
 			tag_addr.eip_tag_addr.tag_name);
@@ -414,15 +421,14 @@ int clPollLink(Link& link)
 				}
 				case VALUE_BOOL: {
 					uint8_t read_buf[1] = {};
-					rc = modbus_read_bits(link.link_config.mb_serial_config.ctx, currentTag.tag_addr.mb_addr.reg, 1,
-						read_buf);
 					if (rc == -1)
 					{
 						currentTag.is_error = true;
 						sprintf(currentTag.err_msg, "Could not read tag.");
 						continue;
 					}
-					currentTag.tag_value.int_value = (int)read_buf[0];
+					bool readBit = testBit(link.mb_registers_block[tagOffset], currentTag.tag_addr.mb_addr.bitOffset);
+					currentTag.tag_value.bool_value = readBit;
 					break;
 				}
 				default:
@@ -508,14 +514,14 @@ int clPollLink(Link& link)
 				}
 				case VALUE_BOOL: {
 					uint8_t read_buf[1] = {};
-					rc = modbus_read_bits(link.link_config.mb_tcp_config.ctx, currentTag.tag_addr.mb_addr.reg, 1, read_buf);
 					if (rc == -1)
 					{
 						currentTag.is_error = true;
 						sprintf(currentTag.err_msg, "Could not read tag.");
 						continue;
 					}
-					currentTag.tag_value.int_value = (int)read_buf[0];
+					bool readBit = testBit(link.mb_registers_block[tagOffset], currentTag.tag_addr.mb_addr.bitOffset);
+					currentTag.tag_value.bool_value = readBit;
 					break;
 				}
 				default:
@@ -524,12 +530,13 @@ int clPollLink(Link& link)
 
 					break;
 				}
+				currentTag.is_error = false;
 			}
 		} break;
 		}
 	} break;
 	}
-	
+
 	std::cout << "Polling block read completed for MB_TCP link: " << link.name << std::endl;
 
 	return 0;
@@ -1093,10 +1100,36 @@ int cl_write_tag(Link* link, int tag_id)
 					  // TODO
 					  // Add the ability to get the value of singular bits.
 		case VALUE_BOOL: {
-			uint8_t write_buf[1] = {};
+			uint16_t write_buf[1] = {};
 
-			write_buf[0] = tag->value_to_write.bool_value;
-			rc = modbus_write_bits(link->link_config.mb_serial_config.ctx, tag->tag_addr.mb_addr.reg, 1, write_buf);
+			// Read previous value of register.
+			rc =
+				modbus_read_registers(link->link_config.mb_serial_config.ctx, tag->tag_addr.mb_addr.reg, 1, write_buf);
+			
+			if (rc == -1)
+			{
+				tag->is_error = true;
+				snprintf(tag->err_msg, sizeof(tag->err_msg), "Could not read tag.");
+				return -1;
+			}
+			
+			int bitOffset = tag->tag_addr.mb_addr.bitOffset;
+			uint16_t bitsBuff = write_buf[0];
+			std::bitset<16> bits(bitsBuff);
+
+			if (tag->value_to_write.bool_value)
+			{
+				// Set the bit.
+				bits.set(bitOffset);
+			}
+			else
+			{
+				bits.reset(bitOffset);
+			}
+			
+			write_buf[0] = bitsBuff;
+			rc =
+				modbus_write_registers(link->link_config.mb_serial_config.ctx, tag->tag_addr.mb_addr.reg, 1, write_buf);
 
 			if (rc == -1)
 			{
@@ -1162,10 +1195,34 @@ int cl_write_tag(Link* link, int tag_id)
 					  // TODO
 					  // Add the ability to get the value of singular bits.
 		case VALUE_BOOL: {
-			uint8_t write_buf[1] = {};
+			uint16_t write_buf[1] = {};
 
-			write_buf[0] = tag->value_to_write.bool_value;
-			rc = modbus_write_bits(link->link_config.mb_tcp_config.ctx, tag->tag_addr.mb_addr.reg, 1, write_buf);
+			// Read previous value of register.
+			rc =
+				modbus_read_registers(link->link_config.mb_tcp_config.ctx, tag->tag_addr.mb_addr.reg, 1, write_buf);
+			
+			if (rc == -1)
+			{
+				tag->is_error = true;
+				snprintf(tag->err_msg, sizeof(tag->err_msg), "Could not read tag.");
+				return -1;
+			}
+			
+			int bitOffset = tag->tag_addr.mb_addr.bitOffset;
+			uint16_t bitsBuff = write_buf[0];
+
+			if (tag->value_to_write.bool_value)
+			{
+				setBit(bitsBuff, bitOffset);
+			}
+			else
+			{
+				clearBit(bitsBuff, bitOffset);
+			}
+			
+			write_buf[0] = bitsBuff;
+			rc =
+				modbus_write_registers(link->link_config.mb_tcp_config.ctx, tag->tag_addr.mb_addr.reg, 1, write_buf);
 
 			if (rc == -1)
 			{
@@ -1173,7 +1230,7 @@ int cl_write_tag(Link* link, int tag_id)
 				snprintf(tag->err_msg, sizeof(tag->err_msg), "Could not read tag.");
 				return -1;
 			}
-
+			
 			tag->is_error = false;
 			tag->write_flag = false;
 			// We get an int value with the first 8 bits representing 8 coils.
