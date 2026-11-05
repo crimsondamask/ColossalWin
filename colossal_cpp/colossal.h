@@ -5,6 +5,7 @@
 #include "plot_buffer.h"
 #include <stdbool.h>
 #include <threads.h>
+#include "../colossaal_app/HmiWidgets.h"
 
 #define CURL_STATICLIB
 #define CL_EXPR_LEN 512

@@ -36,6 +36,7 @@
     <ClCompile Include="..\colossal_cpp\plot_buffer.cpp" />
     <ClCompile Include="..\colossal_cpp\snap7\snap7.cpp" />
     <ClCompile Include="ClAlarms.cpp" />
+    <ClCompile Include="HmiWidgets.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="shell.c" />
     <ClCompile Include="sqlite3.c" />
@@ -73,6 +74,7 @@
     <ClInclude Include="..\colossal_cpp\snap7\snap7.h" />
     <ClInclude Include="..\colossal_cpp\stb_image.h" />
     <ClInclude Include="ClAlarms.h" />
+    <ClInclude Include="HmiWidgets.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />

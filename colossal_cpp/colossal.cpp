@@ -1,13 +1,4 @@
-// colossal_cpp.cpp : This file contains the 'main' function. Program execution
-// begins and ends there.
-/// @file colossal.cpp
-
-#include "mariadb/mysql.h"
-#include "nlohmann/json.hpp"
-#include <cmath>
-#include <inttypes.h>
-#include <stdlib.h>
-#define _CRT_SECURE_NO_WARNINGS
+// colossal_cpp.cpp : This file contains the 'main' function. Program execution // begins and ends there.  /// @file colossal.cpp #include "mariadb/mysql.h" #include "nlohmann/json.hpp" #include <cmath> #include <inttypes.h> #include <stdlib.h> #define _CRT_SECURE_NO_WARNINGS
 #include "colossal.h"
 // #include "curl/curl.h"
 // #include "curl/easy.h"
@@ -271,59 +262,6 @@ static bool parseLinksFromJson(
 	return true;
 }
 
-static bool loadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
-{
-	int image_width = 0;
-	int image_height = 0;
-
-	unsigned char* image_data =
-		stbi_load_from_memory((const unsigned char*)data, (int)data_size, &image_width, &image_height, NULL, 4);
-
-	if (image_data == NULL)
-	{
-		return false;
-	}
-
-	GLuint image_texture;
-	glGenTextures(1, &image_texture);
-	glBindTexture(GL_TEXTURE_2D, image_texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-	stbi_image_free(image_data);
-
-	*out_texture = image_texture;
-	*out_width = image_width;
-	*out_height = image_height;
-
-	return true;
-}
-
-
-static bool loadTextureDataFromFile(std::filesystem::path filePath, GLuint* outTexture, int* outWidth, int* outHeight)
-{
-	std::uintmax_t fileSize = std::filesystem::file_size(filePath);
-	std::ifstream file(filePath, std::ios::binary);
-	if (!file)
-	{
-		return false;
-	}
-
-	std::vector<char> buffer(fileSize);
-	if (file.read(buffer.data(), fileSize))
-	{
-		bool ret = loadTextureFromMemory(buffer.data(), fileSize, outTexture, outWidth, outHeight);
-		return ret;
-	}
-	else
-	{
-		return false;
-	}
-
-}
 
 static void ui_tag_display(size_t link_count, Link links[], HmiDisplay hmi_display[], int id, Buffer buf[],
 	bool* menu_state, ImFont* display_font, ImFont* regular_font, ImFont* icons)
@@ -1617,7 +1555,8 @@ static void ui_links_window(size_t link_count, Link links[], Link ui_link_buffer
 
 static void glfw_error_callback(int error, const char* description);
 
-static void uiShowOverView(int flowMeterImageWidth, int flowMeterImageHeight, GLuint flowMeterImageTexture, ImFont* display_font, Link* links, bool isError);
+
+static void uiShowOverView(std::vector<HmiWidget> widgets, ImFont* display_font, Link* links);
 
 struct CurlMemoryStruct
 {
@@ -2074,14 +2013,12 @@ int main(int, char**)
 		return EXIT_FAILURE;
 	}
 
-	int OverViewImageWidth = 0;
-	int OverViewImageHeight = 0;
-	GLuint OverViewImageTexture = 0;
-
-	if (!loadTextureDataFromFile(std::filesystem::path("./HmiData/overview.png"), &OverViewImageTexture, &OverViewImageWidth, &OverViewImageHeight))
-	{
-		return EXIT_FAILURE;
-	}
+	ImageWidget overviewImageWidget("./HmiData/overview.png");
+	overviewImageWidget.setTexture();
+	HmiWidget overviewWidget(overviewImageWidget, 0.0f, 0.0f, 1920.0f, 1080.0f, 1);
+	
+	std::vector<HmiWidget> overviewWidgets;
+	overviewWidgets.push_back(overviewWidget);
 
 	// Load alarms configuration from JSON file.
 	if (!alarms.loadJsonAlarms("./alarms.json"))
@@ -2261,7 +2198,7 @@ int main(int, char**)
 		else
 		{
 
-			uiShowOverView(OverViewImageWidth, OverViewImageHeight, OverViewImageTexture, display_font, links, links[0].is_error);
+			uiShowOverView(overviewWidgets, display_font, links);
 		}
 
 
@@ -2308,67 +2245,19 @@ int main(int, char**)
 	return EXIT_SUCCESS;
 }
 
-static void uiShowOverView(int OverViewImageWidth, int OverViewImageHeight, GLuint OverViewImageTexture, ImFont* display_font, Link* links, bool isError)
+static void uiShowOverView(std::vector<HmiWidget> widgets, ImFont* display_font, Link* links)
 {
 	ImGui::Begin("HMI_Display");
-
-
 	ImVec2 f = ImGui::GetCursorScreenPos();
-	float OverViewImagex = f.x;
-	float OverViewImagey = f.y;
-
-	ImVec2 minPos = ImVec2(OverViewImagex, OverViewImagey);
-	ImVec2 maxPos = ImVec2(OverViewImagex + OverViewImageWidth, OverViewImagey + OverViewImageHeight);
-
-	ImGui::GetWindowDrawList()->AddImage((ImTextureID)(intptr_t)OverViewImageTexture, minPos, maxPos);
-
-	ImVec2 p = ImGui::GetCursorScreenPos();
-
-	float tagx = p.x + 60.0;
-	float tagy = p.y + 500.0;
-	float tagWidth = 200.0f;
-	float tagHeight = 30.0f;
-	ImVec2 tagRectMin = ImVec2(tagx, tagy);
-	ImVec2 tagRectMax = ImVec2(tagx + tagWidth, tagy + tagHeight);
-
-	ImDrawList* drawList = ImGui::GetWindowDrawList();
-	if (isError)
+	
+	for (int i = 0; i < widgets.size(); i++)
 	{
-		drawList->AddRectFilled(tagRectMin, tagRectMax, IM_COL32(255, 0, 0, 255), 0.0f);
-		drawList->AddRect(tagRectMin, tagRectMax, IM_COL32(200, 200, 200, 255), 0.0f, 0, 5.0f);
+		if (!widgets[i].draw(f)) {}
+
 	}
-	else
-	{
-		drawList->AddRectFilled(tagRectMin, tagRectMax, IM_COL32(0, 0, 0, 255), 0.0f);
-		drawList->AddRect(tagRectMin, tagRectMax, IM_COL32(200, 200, 200, 255), 0.0f, 0, 5.0f);
-	}
-
-	char tagValueStr[32];
-	sprintf(tagValueStr, "%.2f L/min", links[0].tags[0].tag_value.real_value);
-
-
-	ImGui::PushFont(display_font);
-	ImVec2 textSize = ImGui::CalcTextSize(tagValueStr);
-	ImGui::PopFont();
-
-	ImVec2 textPos = ImVec2(tagx + (tagWidth - textSize.x) * 0.5f, tagy + (tagHeight - textSize.y) * 0.5f);
-
-	drawList->AddText(display_font, display_font->FontSize, textPos, IM_COL32(255, 255, 255, 255), tagValueStr);
-	//ImGui::Dummy(ImVec2(tagWidth, tagHeight + 20.0f)); // Reserve space for the tag display
-
-	float buttonx = p.x + 60.0;
-	float buttony = p.y + 550.0;
-
-	ImGui::SetCursorScreenPos(ImVec2(buttonx, buttony));
-
-	if (ImGui::Button("Start Pump", ImVec2(200.0f, 30.0f)))
-	{
-		// Set the write flag for the tag to true
-		//links[0].tags[1].write_flag = true;
-		//links[0].tags[1].tag_value.bool_value = true; // Set the value to true to start the pump
-	}
-
+	
 	ImGui::End();
+	
 }
 
 static void glfw_error_callback(int error, const char* description)

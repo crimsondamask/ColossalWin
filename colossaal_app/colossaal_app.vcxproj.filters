@@ -75,6 +75,9 @@
     <ClCompile Include="ClAlarms.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HmiWidgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\colossal_cpp\colossal.h">
@@ -186,6 +189,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ClAlarms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HmiWidgets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
