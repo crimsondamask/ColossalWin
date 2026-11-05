@@ -26,7 +26,7 @@
     },
     "tags": [
       {
-        "name": "P1_Cmd",
+        "name": "P1_Status",
         "description": " ",
         "unit": " ",
         "enabled": true,
@@ -49,10 +49,10 @@
         "description": " ",
         "enabled": true,
         "logged": true,
-        "name": "P1_FeedbackStatus",
+        "name": "P2_Status",
         "tag_address": {
           "mb_address": 0,
-          "bit": 1,
+          "bit": 4,
           "ab_address": {
             "tag": "Temperature"
           },
@@ -66,7 +66,7 @@
         "value_type": 2
       },
       {
-        "name": "P2_Cmd",
+        "name": "P3_Status",
         "description": " ",
         "unit": " ",
         "enabled": true,
@@ -74,7 +74,67 @@
         "value_type": 2,
         "tag_address": {
           "mb_address": 0,
-          "bit":  4,
+          "bit": 8,
+          "ab_address": {
+            "tag": "Temperature"
+          },
+          "s7_address": {
+            "db": 1,
+            "start": 0,
+            "start_bit": 0
+          }
+        }
+      },
+      {
+        "name": "P1_Count",
+        "description": " ",
+        "unit": " ",
+        "enabled": true,
+        "logged": true,
+        "value_type": 0,
+        "tag_address": {
+          "mb_address": 2,
+          "bit": 0,
+          "ab_address": {
+            "tag": "Temperature"
+          },
+          "s7_address": {
+            "db": 1,
+            "start": 0,
+            "start_bit": 0
+          }
+        }
+      },
+      {
+        "name": "P2_Count",
+        "description": " ",
+        "unit": " ",
+        "enabled": true,
+        "logged": true,
+        "value_type": 0,
+        "tag_address": {
+          "mb_address": 3,
+          "bit": 0,
+          "ab_address": {
+            "tag": "Temperature"
+          },
+          "s7_address": {
+            "db": 1,
+            "start": 0,
+            "start_bit": 0
+          }
+        }
+      },
+      {
+        "name": "P3_Count",
+        "description": " ",
+        "unit": " ",
+        "enabled": true,
+        "logged": true,
+        "value_type": 0,
+        "tag_address": {
+          "mb_address": 4,
+          "bit": 0,
           "ab_address": {
             "tag": "Temperature"
           },
@@ -85,6 +145,7 @@
           }
         }
       }
+
     ]
   },
   {

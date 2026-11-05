@@ -1,14 +1,10 @@
-﻿  colossal.cpp
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(364,22): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(417,19): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(479,76): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(743,22): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(756,22): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2127,51): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2128,52): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2165,44): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-LINK : warning LNK4067: ambiguous entry point; selected 'mainCRTStartup'
-LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+﻿  HmiWidgets.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared\minwindef.h(130,9): warning C4005: 'APIENTRY': macro redefinition
+  (compiling source file 'HmiWidgets.cpp')
+      C:\Users\Admin\Desktop\code\colossal_cpp\colossal_cpp\imgui\GLFW\glfw3.h(98,11):
+      see previous definition of 'APIENTRY'
+  
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\HmiWidgets.cpp(126,1): warning C4715: 'NumericFieldWidget::draw': not all control paths return a value
   colossaal_app.vcxproj -> C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\x64\Debug\colossal_app.exe
   'pwsh.exe' is not recognized as an internal or external command,
   operable program or batch file.

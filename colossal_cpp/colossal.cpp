@@ -2021,9 +2021,33 @@ int main(int, char**)
 	TextWidget textWidgetConfig(txt, 0, 0, 0, display_font);
 	HmiWidget textWidget(textWidgetConfig, 900.0f, 40.0f, 200.0f, 60.0f, 2);
 	
+	NumericFieldWidget numFieldConfigP1(0, 0, display_font, links);
+	HmiWidget numFieldWidgetP1(numFieldConfigP1, 160.0f, 485.0f, 100.0f, 30.0f, 3);
+	
+	NumericFieldWidget numFieldConfigP2(0, 1, display_font, links);
+	HmiWidget numFieldWidgetP2(numFieldConfigP2, 280.0f, 485.0f, 100.0f, 30.0f, 3);
+	
+	NumericFieldWidget numFieldConfigP3(0, 2, display_font, links);
+	HmiWidget numFieldWidgetP3(numFieldConfigP3, 400.0f, 485.0f, 100.0f, 30.0f, 3);
+	
+	NumericFieldWidget numFieldConfigP1nStarts(0, 3, display_font, links);
+	HmiWidget numFieldWidgetP1nStarts(numFieldConfigP1nStarts, 160.0f, 385.0f, 100.0f, 30.0f, 3);
+	
+	NumericFieldWidget numFieldConfigP2nStarts(0, 4, display_font, links);
+	HmiWidget numFieldWidgetP2nStarts(numFieldConfigP2nStarts, 280.0f, 385.0f, 100.0f, 30.0f, 3);
+	
+	NumericFieldWidget numFieldConfigP3nStarts(0, 5, display_font, links);
+	HmiWidget numFieldWidgetP3nStarts(numFieldConfigP3nStarts, 400.0f, 385.0f, 100.0f, 30.0f, 3);
+	
 	std::vector<HmiWidget> overviewWidgets;
 	overviewWidgets.push_back(overviewWidget);
 	overviewWidgets.push_back(textWidget);
+	overviewWidgets.push_back(numFieldWidgetP1);
+	overviewWidgets.push_back(numFieldWidgetP2);
+	overviewWidgets.push_back(numFieldWidgetP3);
+	overviewWidgets.push_back(numFieldWidgetP1nStarts);
+	overviewWidgets.push_back(numFieldWidgetP2nStarts);
+	overviewWidgets.push_back(numFieldWidgetP3nStarts);
 
 	// Load alarms configuration from JSON file.
 	if (!alarms.loadJsonAlarms("./alarms.json"))
