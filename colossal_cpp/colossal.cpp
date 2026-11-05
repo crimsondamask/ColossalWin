@@ -1759,7 +1759,7 @@ int main(int, char**)
 	ImFont* regular_font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0);
 	// ImFont *regular_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 18.0);
 	// Font to use for the HMI display of tags.
-	ImFont* display_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 28.0);
+	ImFont* display_font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\arial.ttf", 24.0);
 #else
 
 	ImFont* regular_font = io.Fonts->AddFontFromFileTTF("./plex.ttf", 16.0);
@@ -2015,10 +2015,15 @@ int main(int, char**)
 
 	ImageWidget overviewImageWidget("./HmiData/overview.png");
 	overviewImageWidget.setTexture();
-	HmiWidget overviewWidget(overviewImageWidget, 0.0f, 0.0f, 1920.0f, 1080.0f, 1);
+	HmiWidget overviewWidget(overviewImageWidget, 0.0f, 100.0f, 1920.0f, 1080.0f, 1);
+	
+	std::string txt = ("STEP OVERVIEW");
+	TextWidget textWidgetConfig(txt, 0, 0, 0, display_font);
+	HmiWidget textWidget(textWidgetConfig, 900.0f, 40.0f, 200.0f, 60.0f, 2);
 	
 	std::vector<HmiWidget> overviewWidgets;
 	overviewWidgets.push_back(overviewWidget);
+	overviewWidgets.push_back(textWidget);
 
 	// Load alarms configuration from JSON file.
 	if (!alarms.loadJsonAlarms("./alarms.json"))

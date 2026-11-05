@@ -4,9 +4,9 @@ C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(417,19
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(479,76): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(743,22): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
 C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(756,22): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2122,51): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2123,52): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2160,44): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2127,51): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2128,52): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\Admin\Desktop\code\colossal-740848fa89\colossal_cpp\colossal.cpp(2165,44): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 LINK : warning LNK4067: ambiguous entry point; selected 'mainCRTStartup'
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   colossaal_app.vcxproj -> C:\Users\Admin\Desktop\code\colossal-740848fa89\colossaal_app\x64\Debug\colossal_app.exe

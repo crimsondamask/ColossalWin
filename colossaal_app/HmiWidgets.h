@@ -35,18 +35,22 @@ public:
 class TextWidget
 {
 public:
-	TextWidget(std::string text, float r, float g, float b);
+	TextWidget() = default;
+	TextWidget(std::string text, int r, int g, int b, ImFont* font);
+	bool draw(ImVec2 windowCursor, float posx, float posy);
 	
 	std::string text;
-	float r;
-	float g;
-	float b;
+	int r;
+	int g;
+	int b;
+	ImFont* font;
 };
 
 class HmiWidget
 {
 public:
 	HmiWidget(ImageWidget imgWidget, float posx, float posy, float width, float height, int id);
+	HmiWidget(TextWidget txtWidget, float posx, float posy, float width, float height, int id);
 	bool draw(ImVec2 windowCursor);
 private:
 	int id;
@@ -57,7 +61,7 @@ private:
 	float height;
 	std::string label;
 	ImageWidget imageConfig;
-	//TextWidget textConfig;
+	TextWidget textConfig;
 
 };
 

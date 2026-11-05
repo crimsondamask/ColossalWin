@@ -1,37 +1,7 @@
 #include "HmiWidgets.h"
 
 
-ImageWidget::ImageWidget(std::string path) : imgWidgetPath(path), texture(0), imgHeight(0), imgWidth(0)
-{
 
-}
-
-bool ImageWidget::setTexture()
-{
-	if (!loadTextureDataFromFile(std::filesystem::path(imgWidgetPath), &texture, &imgWidth, &imgHeight))
-	{
-		return false;
-	}
-
-	return true;
-}
-
-bool ImageWidget::draw(ImVec2 windowCursor, float posx, float posy, float width, float height)
-{
-	float px = windowCursor.x + posx;
-	float py = windowCursor.y + posy;
-
-	ImVec2 minPos = ImVec2(px, py);
-	ImVec2 maxPos = ImVec2(px + width, py + height);
-
-	ImGui::GetWindowDrawList()->AddImage((ImTextureID)(intptr_t)texture, minPos, maxPos);
-
-	return true;
-}
-
-TextWidget::TextWidget(std::string text, float r, float g, float b) : text(text), r(r), g(g), b(b)
-{
-}
 
 
 bool loadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
@@ -88,6 +58,33 @@ bool loadTextureDataFromFile(std::filesystem::path filePath, GLuint* outTexture,
 
 }
 
+ImageWidget::ImageWidget(std::string path) : imgWidgetPath(path), texture(0), imgHeight(0), imgWidth(0)
+{
+}
+
+bool ImageWidget::setTexture()
+{
+	if (!loadTextureDataFromFile(std::filesystem::path(imgWidgetPath), &texture, &imgWidth, &imgHeight))
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool ImageWidget::draw(ImVec2 windowCursor, float posx, float posy, float width, float height)
+{
+	float px = windowCursor.x + posx;
+	float py = windowCursor.y + posy;
+
+	ImVec2 minPos = ImVec2(px, py);
+	ImVec2 maxPos = ImVec2(px + width, py + height);
+
+	ImGui::GetWindowDrawList()->AddImage((ImTextureID)(intptr_t)texture, minPos, maxPos);
+
+	return true;
+}
+
 HmiWidget::HmiWidget(ImageWidget imgWidget, float posx, float posy, float width, float height, int id)
 {
 	this->widgetType = HmiWidgetType::Image;
@@ -99,11 +96,38 @@ HmiWidget::HmiWidget(ImageWidget imgWidget, float posx, float posy, float width,
 	this->posy = posy;
 }
 
+HmiWidget::HmiWidget(TextWidget txtWidget, float posx, float posy, float width, float height, int id)
+{
+	this->widgetType = HmiWidgetType::Text;
+	this->textConfig = txtWidget;
+	this->id = id;
+	this->posx = posx;
+	this->posy = posy;
+	
+	// Calculate text size.
+	this->width = width;
+	this->height = height;
+
+}
+
+TextWidget::TextWidget(std::string text, int r, int g, int b, ImFont* font) : text(text), r(r), g(g), b(b), font(font)
+{
+}
+
+bool TextWidget::draw(ImVec2 windowCursor, float posx, float posy)
+{
+	float px = windowCursor.x + posx;
+	float py = windowCursor.y + posy;
+	ImGui::GetWindowDrawList()->AddText(this->font, this->font->FontSize, ImVec2(px, py), IM_COL32(r, g, b, 255), this->text.c_str());
+	return true;
+}
+
 bool HmiWidget::draw(ImVec2 windowCursor)
 {
 	switch (widgetType)
 	{
 	case HmiWidgetType::Image: imageConfig.draw(windowCursor, posx, posy, width, height); break;
+	case HmiWidgetType::Text: textConfig.draw(windowCursor, posx, posy); break;
 	}
 	return true;
 }
